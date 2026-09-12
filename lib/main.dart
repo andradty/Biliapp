@@ -1,6 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+
 import 'screens/landing_page.dart';
+import 'screens/dashboard_screen.dart';
+import 'screens/add_patient_screen.dart';
+import 'screens/start_examination_screen.dart';
+import 'screens/result_screen.dart';
+import 'screens/patient_history_screen.dart';
+import 'screens/device_setup_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -19,8 +26,18 @@ class BilinovaApp extends StatelessWidget {
       theme: ThemeData(
         colorSchemeSeed: const Color(0xFF0B6E4F),
         useMaterial3: true,
+        scaffoldBackgroundColor: Colors.grey[50],
       ),
-      home: const LandingPage(),
+      initialRoute: '/',
+      routes: {
+        '/': (context) => const LandingPage(),
+        '/dashboard': (context) => const DashboardScreen(),
+        '/add-patient': (context) => const AddPatientScreen(),
+        '/start-exam': (context) => const StartExaminationScreen(),
+        '/result': (context) => const ResultScreen(),
+        '/history': (context) => const PatientHistoryScreen(),
+        '/device-setup': (context) => const DeviceSetupScreen(),
+      },
     );
   }
 }
