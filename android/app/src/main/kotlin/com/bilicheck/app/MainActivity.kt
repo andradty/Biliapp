@@ -1,4 +1,4 @@
-package com.example.biliapp
+package com.bilicheck.app
 
 import io.flutter.embedding.android.FlutterActivity
 

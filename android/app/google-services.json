@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "999330931535",
+    "firebase_url": "https://bilicheck-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "bilicheck",
+    "storage_bucket": "bilicheck.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:999330931535:android:102308e7c21edef278db3a",
+        "android_client_info": {
+          "package_name": "com.bilicheck.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAi4M-6w2_zQ1X8tLIP3qzfH9X95XrOc5A"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
