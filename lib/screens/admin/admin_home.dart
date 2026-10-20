@@ -8,6 +8,7 @@ import '../../services/data_service.dart';
 import '../../theme.dart';
 import '../../widgets/common.dart';
 import '../hasil_screen.dart';
+import 'ringkasan_admin.dart';
 
 class AdminHome extends StatefulWidget {
   final AppUser user;
@@ -21,12 +22,14 @@ class AdminHome extends StatefulWidget {
 
 class _AdminHomeState extends State<AdminHome> {
   String _q = '';
+  late final Stream<List<Pemeriksaan>> _s30 = widget.svc.pemeriksaan30Hari();
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.transparent,
       floatingActionButton: FloatingActionButton(
+        heroTag: 'fab_home',
         backgroundColor: AppColors.orange2,
         foregroundColor: Colors.white,
         onPressed: widget.onTambah,
@@ -100,6 +103,12 @@ class _AdminHomeState extends State<AdminHome> {
                                     fontSize: 16)),
                           ),
                         ]),
+                      ),
+                      StreamBuilder<List<Pemeriksaan>>(
+                        stream: _s30,
+                        builder: (c, s30) => s30.hasData
+                            ? RingkasanAdmin(data: s30.data!, pasien: pasien, svc: widget.svc)
+                            : const SizedBox.shrink(),
                       ),
                       const SectionLabel('Pemeriksaan Terakhir'),
                       if (list.isEmpty)

@@ -2,6 +2,11 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'util.dart';
 
+/// Cermin dokumen Firestore `pemeriksaan/{sesi_id}`.
+///
+/// `hasil` (field `hasil_bilirubin`) adalah NILAI UTAMA dengan satuan `satuan`.
+/// Nilai mentah fotodioda disimpan di `pengukuran` supaya hasil bisa dihitung
+/// ulang bila rumus/satuan resmi berubah.
 class Pemeriksaan {
   final String id;
   final String pasienId;
@@ -9,10 +14,12 @@ class Pemeriksaan {
   final String kalibrasiId;
   final String userId;
   final DateTime waktu;
-  final double hasil; // mg/dL
+  final double hasil;
+  final String satuan; // '%' | 'mg/dL'
   final String status; // normal | waspada | kritis
   final String puskesmasId;
   final String? orangTuaId;
+  final Map<String, dynamic> pengukuran; // adc, arus_ma, lux, konsentrasi, jaundice_persen
   final bool pending;
 
   const Pemeriksaan({
@@ -25,9 +32,14 @@ class Pemeriksaan {
     required this.hasil,
     required this.status,
     required this.puskesmasId,
+    this.satuan = 'mg/dL',
     this.orangTuaId,
+    this.pengukuran = const {},
     this.pending = false,
   });
+
+  /// Skala maksimum gauge pada layar Hasil.
+  double get skalaMaks => satuan == '%' ? 100 : 20;
 
   factory Pemeriksaan.fromDoc(DocumentSnapshot<Map<String, dynamic>> d) {
     final m = d.data() ?? {};
@@ -39,10 +51,44 @@ class Pemeriksaan {
       userId: (m['user_id'] ?? '') as String,
       waktu: toDate(m['waktu_pemeriksaan']) ?? DateTime.now(),
       hasil: ((m['hasil_bilirubin'] ?? 0) as num).toDouble(),
+      // dokumen lama (mis. ses_001) belum punya `satuan`
+      satuan: (m['satuan'] ?? 'mg/dL') as String,
       status: (m['status_hasil'] ?? '') as String,
       puskesmasId: (m['puskesmas_id'] ?? '') as String,
       orangTuaId: m['orang_tua_id'] as String?,
+      pengukuran: Map<String, dynamic>.from((m['pengukuran'] ?? {}) as Map),
       pending: d.metadata.hasPendingWrites,
     );
   }
+
+  /// Satu-satunya tempat yang mendefinisikan isi dokumen saat dibuat.
+  /// `notif_terkirim` WAJIB boolean false (dipantau relay VPS).
+  static Map<String, dynamic> buatMap({
+    required String pasienId,
+    required String? orangTuaId,
+    required String puskesmasId,
+    required String deviceId,
+    required String kalibrasiId,
+    required String userId,
+    required double hasil,
+    required String satuan,
+    required String status,
+    required Map<String, dynamic> pengukuran,
+    DateTime? waktu,
+  }) =>
+      {
+        'pasien_id': pasienId,
+        'orang_tua_id': orangTuaId,
+        'puskesmas_id': puskesmasId,
+        'device_id': deviceId,
+        'kalibrasi_id': kalibrasiId,
+        'user_id': userId,
+        'waktu_pemeriksaan': Timestamp.fromDate(waktu ?? DateTime.now()),
+        'created_at': FieldValue.serverTimestamp(),
+        'hasil_bilirubin': hasil,
+        'satuan': satuan,
+        'status_hasil': status,
+        'pengukuran': pengukuran,
+        'notif_terkirim': false,
+      };
 }

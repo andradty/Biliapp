@@ -4,6 +4,7 @@ import '../../models/pasien.dart';
 import '../../services/data_service.dart';
 import '../../theme.dart';
 import '../../widgets/common.dart';
+import 'kartu_alat.dart';
 
 /// Placeholder: alur sesi pemeriksaan (RTDB) menyusul setelah firmware siap.
 class AdminAlat extends StatefulWidget {
@@ -40,6 +41,8 @@ class _AdminAlatState extends State<AdminAlat> {
                 Expanded(child: Text('Status alat: belum terhubung (menunggu integrasi firmware)')),
               ]),
             ),
+            const SizedBox(height: 12),
+            KartuInfoAlat(svc: widget.svc),
             const SectionLabel('Mulai Pemeriksaan'),
             StreamBuilder<List<Pasien>>(
               stream: widget.svc.pasienPuskesmas(),

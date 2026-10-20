@@ -4,6 +4,7 @@ import '../models/pasien.dart';
 import '../models/pemeriksaan.dart';
 import '../theme.dart';
 import '../widgets/common.dart';
+import '../widgets/tren_chart.dart';
 import 'hasil_screen.dart';
 
 /// Dipakai Petugas (semua pasien) dan Orang Tua (anaknya) lewat stream berbeda.
@@ -42,6 +43,8 @@ class RiwayatPasienScreen extends StatelessWidget {
                 if (!snap.hasData) return const Center(child: CircularProgressIndicator());
                 final list = snap.data!;
                 return ListView(padding: const EdgeInsets.fromLTRB(20, 4, 20, 24), children: [
+                  const SizedBox(height: 12),
+                  TrenChart(data: list),
                   const SectionLabel('RIWAYAT PEMERIKSAAN'),
                   if (list.isEmpty)
                     const Padding(

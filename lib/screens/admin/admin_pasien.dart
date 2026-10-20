@@ -23,6 +23,7 @@ class _AdminPasienState extends State<AdminPasien> {
     return Scaffold(
       backgroundColor: Colors.transparent,
       floatingActionButton: FloatingActionButton(
+        heroTag: 'fab_pasien',
         backgroundColor: AppColors.orange2,
         foregroundColor: Colors.white,
         onPressed: widget.onTambah,
@@ -60,7 +61,7 @@ class _AdminPasienState extends State<AdminPasien> {
                       margin: const EdgeInsets.only(bottom: 10),
                       decoration: BoxDecoration(
                           color: Colors.white, borderRadius: BorderRadius.circular(16)),
-                      child: ListTile(
+                      child: Material(type: MaterialType.transparency, child: ListTile(
                         leading: const BabyAvatar(),
                         title: Text(p.nama, style: const TextStyle(fontWeight: FontWeight.w600)),
                         subtitle: Text(
@@ -77,7 +78,7 @@ class _AdminPasienState extends State<AdminPasien> {
                                 pasien: p, stream: widget.svc.riwayatPasien(p.id)),
                           ),
                         ),
-                      ),
+                      )),
                     ),
                 ]);
               },

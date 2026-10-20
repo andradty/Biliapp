@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import '../models/pemeriksaan.dart';
 import '../theme.dart';
 import '../widgets/common.dart';
+import '../widgets/edukasi_card.dart';
 
 class HasilScreen extends StatelessWidget {
   final Pemeriksaan p;
@@ -37,13 +38,13 @@ class HasilScreen extends StatelessWidget {
                     child: Stack(alignment: Alignment.center, children: [
                       CustomPaint(
                         size: const Size(210, 210),
-                        painter: _RingPainter((p.hasil / 20).clamp(0.0, 1.0), c),
+                        painter: _RingPainter((p.hasil / p.skalaMaks).clamp(0.0, 1.0), c),
                       ),
                       Column(mainAxisSize: MainAxisSize.min, children: [
                         Text(fmtKadar(p.hasil),
                             style: const TextStyle(fontSize: 38, fontWeight: FontWeight.w700)),
-                        const Text('mg/dL',
-                            style: TextStyle(fontSize: 12, color: AppColors.muted)),
+                        Text(p.satuan,
+                            style: const TextStyle(fontSize: 12, color: AppColors.muted)),
                         const SizedBox(height: 6),
                         StatusBadge(p.status),
                       ]),
@@ -57,6 +58,8 @@ class HasilScreen extends StatelessWidget {
                       style: const TextStyle(color: AppColors.muted, fontSize: 13)),
                 ]),
               ),
+              const SizedBox(height: 16),
+              EdukasiCard(status: p.status),
               const SizedBox(height: 24),
               GradientButton(label: 'Selesai', onPressed: () => Navigator.maybePop(context)),
             ]),

@@ -43,7 +43,7 @@ class UserAnak extends StatelessWidget {
                     margin: const EdgeInsets.only(bottom: 10),
                     decoration: BoxDecoration(
                         color: Colors.white, borderRadius: BorderRadius.circular(16)),
-                    child: ListTile(
+                    child: Material(type: MaterialType.transparency, child: ListTile(
                       leading: const BabyAvatar(),
                       title: Text(p.nama, style: const TextStyle(fontWeight: FontWeight.w600)),
                       subtitle: Text(p.usia, style: const TextStyle(fontSize: 12)),
@@ -55,7 +55,7 @@ class UserAnak extends StatelessWidget {
                               pasien: p, stream: svc.pemeriksaanAnak(pasienId: p.id)),
                         ),
                       ),
-                    ),
+                    )),
                   ),
               ]);
             },

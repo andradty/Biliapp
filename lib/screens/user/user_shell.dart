@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../models/app_user.dart';
 import '../../services/data_service.dart';
+import '../../services/fcm_service.dart';
 import '../../widgets/common.dart';
 import '../akun_screen.dart';
 import 'user_anak.dart';
@@ -18,6 +19,12 @@ class UserShell extends StatefulWidget {
 class _UserShellState extends State<UserShell> {
   int _i = 0;
   late final DataService _svc = DataService(widget.user);
+
+  @override
+  void initState() {
+    super.initState();
+    FcmService.instance.init(widget.user.uid);
+  }
 
   @override
   Widget build(BuildContext context) {

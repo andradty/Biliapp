@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../models/app_user.dart';
+import '../models/device.dart';
+import '../models/kalibrasi.dart';
 import '../models/pasien.dart';
 import '../models/pemeriksaan.dart';
 
@@ -53,6 +55,34 @@ class DataService {
       .orderBy('waktu_pemeriksaan', descending: true)
       .snapshots(includeMetadataChanges: true)
       .map(_periksa);
+
+  /// 30 hari terakhir untuk ringkasan (memakai index puskesmas_id + waktu desc).
+  Stream<List<Pemeriksaan>> pemeriksaan30Hari() {
+    final awal = DateTime.now().subtract(const Duration(days: 30));
+    return _db
+        .collection('pemeriksaan')
+        .where('puskesmas_id', isEqualTo: user.puskesmasId)
+        .where('waktu_pemeriksaan', isGreaterThanOrEqualTo: Timestamp.fromDate(awal))
+        .orderBy('waktu_pemeriksaan', descending: true)
+        .snapshots(includeMetadataChanges: true)
+        .map(_periksa);
+  }
+
+  /// Alat milik Puskesmas Petugas (1 Puskesmas = 1 alat).
+  Stream<DeviceInfo?> deviceSaya() => _db
+      .collection('devices')
+      .where('puskesmas_id', isEqualTo: user.puskesmasId)
+      .limit(1)
+      .snapshots()
+      .map((s) => s.docs.isEmpty ? null : DeviceInfo.fromDoc(s.docs.first));
+
+  Stream<Kalibrasi?> kalibrasiAktif(String deviceId, String kalibrasiId) => _db
+      .collection('devices')
+      .doc(deviceId)
+      .collection('kalibrasi')
+      .doc(kalibrasiId)
+      .snapshots()
+      .map((d) => d.exists ? Kalibrasi.fromDoc(deviceId, d) : null);
 
   /// Mencari akun Orang Tua lewat nomor HP (untuk menautkan ke pasien).
   Future<String?> cariOrangTua(String nohp) async {

@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+import 'fcm_service.dart';
+
 class AuthException implements Exception {
   final String message;
   const AuthException(this.message);
@@ -52,7 +54,10 @@ class AuthService {
     }
   }
 
-  Future<void> logout() => _auth.signOut();
+  Future<void> logout() async {
+    await FcmService.instance.lepas();
+    await _auth.signOut();
+  }
 
   static String pesanError(Object e) {
     if (e is AuthException) return e.message;

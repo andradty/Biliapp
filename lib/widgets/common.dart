@@ -284,7 +284,7 @@ class PemeriksaanTile extends StatelessWidget {
                         if (subtitle != null)
                           Text('$subtitle  •  ',
                               style: const TextStyle(fontSize: 12, color: AppColors.muted)),
-                        Text('${fmtKadar(p.hasil)} mg/dL',
+                        Text('${fmtKadar(p.hasil)} ${p.satuan}',
                             style: TextStyle(
                                 fontSize: 12.5, fontWeight: FontWeight.w700, color: c)),
                       ]),
