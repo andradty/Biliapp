@@ -24,6 +24,9 @@ class _AuthScreenState extends State<AuthScreen> {
   bool _busy = false;
   bool _hide = true;
   String? _error;
+  int _gagal = 0; // jumlah gagal login beruntun untuk email yang sama
+  String _gagalEmail = '';
+  bool _resetBusy = false;
 
   @override
   void dispose() {
@@ -48,7 +51,16 @@ class _AuthScreenState extends State<AuthScreen> {
         await _svc.login(_email.text, _pass.text);
       }
     } catch (e) {
-      if (mounted) setState(() => _error = AuthService.pesanError(e));
+      if (mounted) {
+        setState(() {
+          if (!_register && AuthService.salahKredensial(e)) {
+            final em = _email.text.trim().toLowerCase();
+            _gagal = em == _gagalEmail ? _gagal + 1 : 1;
+            _gagalEmail = em;
+          }
+          _error = AuthService.pesanError(e);
+        });
+      }
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -57,7 +69,34 @@ class _AuthScreenState extends State<AuthScreen> {
   void _setMode(bool reg) => setState(() {
         _register = reg;
         _error = null;
+        _gagal = 0;
       });
+
+  Future<void> _lupaPassword() async {
+    final email = _email.text.trim();
+    if (!email.contains('@')) {
+      setState(() => _error = 'Isi email yang terdaftar dulu, lalu tekan "Lupa password?".');
+      return;
+    }
+    setState(() {
+      _resetBusy = true;
+      _error = null;
+    });
+    try {
+      await _svc.kirimResetPassword(email);
+      if (!mounted) return;
+      setState(() => _gagal = 0);
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Jika $email terdaftar, link reset password sudah dikirim. '
+            'Cek inbox atau folder spam.'),
+        duration: const Duration(seconds: 6),
+      ));
+    } catch (e) {
+      if (mounted) setState(() => _error = AuthService.pesanError(e));
+    } finally {
+      if (mounted) setState(() => _resetBusy = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -126,7 +165,15 @@ class _AuthScreenState extends State<AuthScreen> {
                         validator: (v) =>
                             (v ?? '').length >= 6 ? null : 'Minimal 6 karakter',
                       ),
-                      const SizedBox(height: 20),
+                      if (!_register)
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: TextButton(
+                            onPressed: _resetBusy ? null : _lupaPassword,
+                            child: Text(_resetBusy ? 'Mengirim...' : 'Lupa password?'),
+                          ),
+                        ),
+                      const SizedBox(height: 8),
                       _GradientButton(
                         label: _register ? 'Daftar' : 'Masuk',
                         busy: _busy,
@@ -138,6 +185,27 @@ class _AuthScreenState extends State<AuthScreen> {
                           child: Text(_error!,
                               textAlign: TextAlign.center,
                               style: const TextStyle(color: Color(0xFFC62828), fontSize: 13)),
+                        ),
+                      if (!_register && _gagal >= 3)
+                        Container(
+                          margin: const EdgeInsets.only(top: 14),
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                              color: const Color(0xFFFFF3E0),
+                              borderRadius: BorderRadius.circular(14)),
+                          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                            Text('Sudah $_gagal kali gagal masuk. Lupa password?',
+                                style: TextStyle(fontWeight: FontWeight.w600)),
+                            const SizedBox(height: 4),
+                            const Text(
+                                'Kami bisa mengirim link untuk membuat password baru ke email di atas.',
+                                style: TextStyle(fontSize: 12.5, height: 1.4)),
+                            const SizedBox(height: 6),
+                            TextButton(
+                              onPressed: _resetBusy ? null : _lupaPassword,
+                              child: const Text('Kirim link reset password'),
+                            ),
+                          ]),
                         ),
                     ],
                   ),

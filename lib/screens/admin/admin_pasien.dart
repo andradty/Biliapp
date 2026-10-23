@@ -75,7 +75,7 @@ class _AdminPasienState extends State<AdminPasien> {
                           context,
                           MaterialPageRoute(
                             builder: (_) => RiwayatPasienScreen(
-                                pasien: p, stream: widget.svc.riwayatPasien(p.id)),
+                                pasien: p, stream: widget.svc.riwayatPasien(p.id), svc: widget.svc),
                           ),
                         ),
                       )),

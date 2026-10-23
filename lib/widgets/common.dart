@@ -31,6 +31,8 @@ String statusLabel(String s) {
       return 'Warning';
     case 'kritis':
       return 'Kritis';
+    case 'dibatalkan':
+      return 'Dibatalkan';
     default:
       return '-';
   }
@@ -256,7 +258,7 @@ class PemeriksaanTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final c = statusColor(p.status);
+    final c = statusColor(p.dibatalkan ? 'dibatalkan' : p.status);
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       clipBehavior: Clip.antiAlias,
@@ -286,7 +288,11 @@ class PemeriksaanTile extends StatelessWidget {
                               style: const TextStyle(fontSize: 12, color: AppColors.muted)),
                         Text('${fmtKadar(p.hasil)} ${p.satuan}',
                             style: TextStyle(
-                                fontSize: 12.5, fontWeight: FontWeight.w700, color: c)),
+                                fontSize: 12.5,
+                                fontWeight: FontWeight.w700,
+                                color: c,
+                                decoration:
+                                    p.dibatalkan ? TextDecoration.lineThrough : null)),
                       ]),
                     ]),
                   ),
@@ -295,7 +301,7 @@ class PemeriksaanTile extends StatelessWidget {
                       padding: EdgeInsets.only(right: 8),
                       child: Icon(Icons.cloud_off, size: 16, color: AppColors.muted),
                     ),
-                  StatusBadge(p.status),
+                  StatusBadge(p.dibatalkan ? 'dibatalkan' : p.status),
                 ]),
               ),
             ),

@@ -5,6 +5,7 @@ import '../../services/data_service.dart';
 import '../../theme.dart';
 import '../../widgets/common.dart';
 import 'kartu_alat.dart';
+import 'mulai_pemeriksaan_screen.dart';
 
 /// Placeholder: alur sesi pemeriksaan (RTDB) menyusul setelah firmware siap.
 class AdminAlat extends StatefulWidget {
@@ -38,7 +39,7 @@ class _AdminAlatState extends State<AdminAlat> {
               child: const Row(children: [
                 Icon(Icons.circle, size: 12, color: AppColors.muted),
                 SizedBox(width: 10),
-                Expanded(child: Text('Status alat: belum terhubung (menunggu integrasi firmware)')),
+                Expanded(child: Text('Status alat: belum terhubung ke aplikasi (menunggu integrasi firmware)')),
               ]),
             ),
             const SizedBox(height: 12),
@@ -69,8 +70,13 @@ class _AdminAlatState extends State<AdminAlat> {
               label: 'Mulai Pemeriksaan',
               onPressed: _pasienId == null
                   ? null
-                  : () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                      content: Text('Belum tersambung ke perangkat. Menunggu firmware.'))),
+                  : () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => MulaiPemeriksaanScreen(
+                              svc: widget.svc, pasienId: _pasienId!),
+                        ),
+                      ),
             ),
           ]),
         ),

@@ -73,7 +73,9 @@ class RingkasanAdmin extends StatelessWidget {
                 context,
                 MaterialPageRoute(
                   builder: (_) => RiwayatPasienScreen(
-                      pasien: pasien[e.pasienId]!, stream: svc.riwayatPasien(e.pasienId)),
+                      pasien: pasien[e.pasienId]!,
+                      stream: svc.riwayatPasien(e.pasienId),
+                      svc: svc),
                 ),
               ),
             ),

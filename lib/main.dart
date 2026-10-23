@@ -7,6 +7,7 @@ import 'firebase_options.dart';
 import 'models/app_user.dart';
 import 'screens/guest_flow.dart';
 import 'screens/home_screen.dart';
+import 'screens/splash_screen.dart';
 import 'services/auth_service.dart';
 import 'theme.dart';
 
@@ -24,8 +25,50 @@ class BiliCheckApp extends StatelessWidget {
         title: 'BiliCheck',
         debugShowCheckedModeBanner: false,
         theme: buildTheme(),
-        home: const AuthGate(),
+        home: const _Boot(),
       );
+}
+
+/// Splash minimal ~2 detik di atas AuthGate, lalu memudar.
+class _Boot extends StatefulWidget {
+  const _Boot();
+
+  @override
+  State<_Boot> createState() => _BootState();
+}
+
+class _BootState extends State<_Boot> {
+  bool _tampil = true;
+  bool _hilang = false;
+
+  @override
+  void initState() {
+    super.initState();
+    Future.delayed(const Duration(milliseconds: 2000), () {
+      if (mounted) setState(() => _tampil = false);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(children: [
+      const AuthGate(),
+      if (!_hilang)
+        Positioned.fill(
+          child: IgnorePointer(
+            ignoring: !_tampil,
+            child: AnimatedOpacity(
+              opacity: _tampil ? 1 : 0,
+              duration: const Duration(milliseconds: 450),
+              onEnd: () {
+                if (!_tampil && mounted) setState(() => _hilang = true);
+              },
+              child: const SplashScreen(),
+            ),
+          ),
+        ),
+    ]);
+  }
 }
 
 /// Login -> baca users/{uid} -> arahkan sesuai role.
@@ -43,7 +86,7 @@ class AuthGate extends StatelessWidget {
       stream: _svc.authChanges,
       builder: (context, snap) {
         if (snap.connectionState == ConnectionState.waiting) {
-          return const Scaffold(body: Center(child: CircularProgressIndicator()));
+          return const SplashScreen();
         }
         final user = snap.data;
         if (user == null) return GuestFlow(key: _guestKey);

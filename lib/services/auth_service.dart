@@ -54,6 +54,19 @@ class AuthService {
     }
   }
 
+  /// Kirim email reset password. Firebase tidak membocorkan apakah email terdaftar.
+  Future<void> kirimResetPassword(String email) async {
+    await _auth.setLanguageCode('id');
+    await _auth.sendPasswordResetEmail(email: email.trim());
+  }
+
+  /// True kalau kegagalan login karena email/password salah.
+  static bool salahKredensial(Object e) =>
+      e is FirebaseAuthException &&
+      (e.code == 'invalid-credential' ||
+          e.code == 'wrong-password' ||
+          e.code == 'user-not-found');
+
   Future<void> logout() async {
     await FcmService.instance.lepas();
     await _auth.signOut();

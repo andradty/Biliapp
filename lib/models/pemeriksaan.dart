@@ -21,6 +21,8 @@ class Pemeriksaan {
   final String? orangTuaId;
   final Map<String, dynamic> pengukuran; // adc, arus_ma, lux, konsentrasi, jaundice_persen
   final bool pending;
+  final bool dibatalkan; // dibatalkan Petugas (void); data asli tetap tersimpan
+  final String? alasanBatal;
 
   const Pemeriksaan({
     required this.id,
@@ -36,6 +38,8 @@ class Pemeriksaan {
     this.orangTuaId,
     this.pengukuran = const {},
     this.pending = false,
+    this.dibatalkan = false,
+    this.alasanBatal,
   });
 
   /// Skala maksimum gauge pada layar Hasil.
@@ -58,6 +62,8 @@ class Pemeriksaan {
       orangTuaId: m['orang_tua_id'] as String?,
       pengukuran: Map<String, dynamic>.from((m['pengukuran'] ?? {}) as Map),
       pending: d.metadata.hasPendingWrites,
+      dibatalkan: m['dibatalkan'] == true,
+      alasanBatal: m['alasan_batal'] as String?,
     );
   }
 

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import '../theme.dart';
+import 'kontak_screen.dart';
+import 'tentang_screen.dart';
 
 class LandingScreen extends StatelessWidget {
   final VoidCallback onStart;
@@ -10,6 +12,14 @@ class LandingScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBodyBehindAppBar: true,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        iconTheme: const IconThemeData(color: AppColors.teal),
+      ),
+      drawer: const _MenuDrawer(),
       body: Container(
         decoration: bgGradient,
         child: SafeArea(
@@ -17,7 +27,7 @@ class LandingScreen extends StatelessWidget {
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 560),
               child: ListView(
-                padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
+                padding: const EdgeInsets.fromLTRB(24, 56, 24, 32),
                 children: [
                   SvgPicture.asset('assets/logo.svg', height: 90),
                   const SizedBox(height: 28),
@@ -126,6 +136,51 @@ class LandingScreen extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _MenuDrawer extends StatelessWidget {
+  const _MenuDrawer();
+
+  @override
+  Widget build(BuildContext context) {
+    void buka(Widget page) {
+      Navigator.pop(context); // tutup drawer
+      Navigator.push(context, MaterialPageRoute(builder: (_) => page));
+    }
+
+    return Drawer(
+      child: SafeArea(
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 24, 20, 16),
+            child: SvgPicture.asset('assets/logo.svg', height: 64),
+          ),
+          const Divider(height: 1),
+          ListTile(
+            leading: const Icon(Icons.home_outlined),
+            title: const Text('Beranda'),
+            onTap: () => Navigator.pop(context),
+          ),
+          ListTile(
+            leading: const Icon(Icons.groups_outlined),
+            title: const Text('Tentang Kami / Tim'),
+            onTap: () => buka(const TentangScreen()),
+          ),
+          ListTile(
+            leading: const Icon(Icons.mail_outline),
+            title: const Text('Hubungi Kami'),
+            onTap: () => buka(const KontakScreen()),
+          ),
+          const Spacer(),
+          const Padding(
+            padding: EdgeInsets.all(20),
+            child: Text('© 2026 BiliCheck · Kelompok 9',
+                style: TextStyle(fontSize: 12, color: AppColors.muted)),
+          ),
+        ]),
       ),
     );
   }

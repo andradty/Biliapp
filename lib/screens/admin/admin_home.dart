@@ -7,6 +7,7 @@ import '../../models/pemeriksaan.dart';
 import '../../services/data_service.dart';
 import '../../theme.dart';
 import '../../widgets/common.dart';
+import '../../widgets/notification_bell.dart';
 import '../hasil_screen.dart';
 import 'ringkasan_admin.dart';
 
@@ -55,13 +56,7 @@ class _AdminHomeState extends State<AdminHome> {
                   ),
                 ]),
               ),
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.25),
-                    borderRadius: BorderRadius.circular(14)),
-                child: const Icon(Icons.notifications, color: AppColors.orange1),
-              ),
+              NotificationBell(user: widget.user, svc: widget.svc),
             ]),
           ),
           Expanded(
@@ -127,7 +122,9 @@ class _AdminHomeState extends State<AdminHome> {
                             context,
                             MaterialPageRoute(
                               builder: (_) => HasilScreen(
-                                  p: e, namaPasien: pasien[e.pasienId]?.nama ?? 'Pasien'),
+                                  p: e,
+                                  namaPasien: pasien[e.pasienId]?.nama ?? 'Pasien',
+                                  svc: widget.svc),
                             ),
                           ),
                         ),
