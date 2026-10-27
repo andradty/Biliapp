@@ -18,7 +18,7 @@ const bool kInputManual = true;
 const bool kSimpanOtomatis = false;
 
 /// Bacaan live dianggap putus kalau tidak ada update sebanyak ini.
-const int kBatasStaleDetik = 6;
+const int kBatasStaleDetik = 10;
 
 const String kSatuan = BacaanAlat.satuan; // '%'
 
@@ -48,6 +48,7 @@ class _MulaiPemeriksaanScreenState extends State<MulaiPemeriksaanScreen> {
   Timer? _ticker;
   BacaanAlat? _live;
   DateTime? _liveTerakhir;
+  int? _nTerakhir; // `n` terakhir yang terlihat; membedakan nilai lama vs data baru
   String? _sesiId;
   BacaanAlat? _rekam; // hasil REKAM (dibekukan)
   String? _errorAlat;
@@ -101,8 +102,18 @@ class _MulaiPemeriksaanScreenState extends State<MulaiPemeriksaanScreen> {
     _subLive = widget.svc.bacaanLive(_device!.id).listen((b) {
       if (!mounted) return;
       setState(() {
+        if (b == null) {
+          // node live kosong / null
+          _live = null;
+          _liveTerakhir = null;
+          _nTerakhir = null;
+          return;
+        }
+        // Event pertama = nilai lama yang tersimpan di RTDB.
+        // Dianggap segar hanya kalau `n` berubah dari yang terakhir terlihat.
+        if (_nTerakhir != null && b.urut != _nTerakhir) _liveTerakhir = DateTime.now();
+        _nTerakhir = b.urut;
         _live = b;
-        _liveTerakhir = DateTime.now();
       });
     }, onError: (e) {
       if (mounted) setState(() => _errorAlat = '$e');
