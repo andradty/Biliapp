@@ -4,6 +4,7 @@ import '../models/app_user.dart';
 import '../services/auth_service.dart';
 import '../theme.dart';
 import '../widgets/common.dart';
+import 'akun_sheets.dart';
 
 class AkunScreen extends StatelessWidget {
   final AppUser user;
@@ -49,6 +50,32 @@ class AkunScreen extends StatelessWidget {
             _row('Email', user.email),
             _row('Nomor Telepon', user.nohp),
             if (user.isPetugas) _row('Puskesmas', user.puskesmasId ?? ''),
+            const SizedBox(height: 8),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
+                ),
+                onPressed: () => bukaUbahProfil(context, user),
+                icon: const Icon(Icons.edit_outlined, size: 18),
+                label: const Text('Ubah Profil'),
+              ),
+            ),
+            const SizedBox(height: 10),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
+                ),
+                onPressed: () => bukaGantiPassword(context),
+                icon: const Icon(Icons.lock_outline, size: 18),
+                label: const Text('Ganti Password'),
+              ),
+            ),
             const SizedBox(height: 24),
             SizedBox(
               width: double.infinity,

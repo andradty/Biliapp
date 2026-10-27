@@ -54,6 +54,22 @@ class AuthService {
     }
   }
 
+  /// Ubah nama dan nomor HP sendiri (rules mengizinkan nama, nohp, fcm_token).
+  /// Tidak perlu di-await agar tetap jalan offline.
+  Future<void> ubahProfil({required String uid, required String nama, required String nohp}) =>
+      _db.collection('users').doc(uid).update({'nama': nama.trim(), 'nohp': nohp.trim()});
+
+  /// Ganti password: verifikasi ulang dengan password lama, lalu perbarui.
+  Future<void> gantiPassword({required String lama, required String baru}) async {
+    final u = _auth.currentUser;
+    if (u == null || u.email == null) {
+      throw const AuthException('Sesi login tidak ditemukan. Silakan login ulang.');
+    }
+    await u.reauthenticateWithCredential(
+        EmailAuthProvider.credential(email: u.email!, password: lama));
+    await u.updatePassword(baru);
+  }
+
   /// Kirim email reset password. Firebase tidak membocorkan apakah email terdaftar.
   Future<void> kirimResetPassword(String email) async {
     await _auth.setLanguageCode('id');

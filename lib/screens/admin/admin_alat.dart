@@ -6,8 +6,9 @@ import '../../theme.dart';
 import '../../widgets/common.dart';
 import 'kartu_alat.dart';
 import 'mulai_pemeriksaan_screen.dart';
+import 'status_alat.dart';
 
-/// Placeholder: alur sesi pemeriksaan (RTDB) menyusul setelah firmware siap.
+/// Tab Alat: status koneksi, info + kalibrasi alat, dan mulai pemeriksaan.
 class AdminAlat extends StatefulWidget {
   final DataService svc;
   const AdminAlat({super.key, required this.svc});
@@ -32,16 +33,7 @@ class _AdminAlatState extends State<AdminAlat> {
         ),
         Expanded(
           child: ListView(padding: const EdgeInsets.all(20), children: [
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration:
-                  BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
-              child: const Row(children: [
-                Icon(Icons.circle, size: 12, color: AppColors.muted),
-                SizedBox(width: 10),
-                Expanded(child: Text('Status alat: belum terhubung ke aplikasi (menunggu integrasi firmware)')),
-              ]),
-            ),
+            StatusAlatBar(svc: widget.svc),
             const SizedBox(height: 12),
             KartuInfoAlat(svc: widget.svc),
             const SectionLabel('Mulai Pemeriksaan'),

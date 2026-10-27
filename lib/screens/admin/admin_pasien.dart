@@ -5,6 +5,7 @@ import '../../services/data_service.dart';
 import '../../theme.dart';
 import '../../widgets/common.dart';
 import '../riwayat_pasien_screen.dart';
+import 'edit_pasien_sheet.dart';
 
 class AdminPasien extends StatefulWidget {
   final DataService svc;
@@ -17,6 +18,13 @@ class AdminPasien extends StatefulWidget {
 
 class _AdminPasienState extends State<AdminPasien> {
   String _q = '';
+
+  void _edit(Pasien p) => showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    builder: (_) => EditPasienSheet(svc: widget.svc, pasien: p),
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -46,7 +54,7 @@ class _AdminPasienState extends State<AdminPasien> {
                 if (!snap.hasData) return const Center(child: CircularProgressIndicator());
                 final q = _q.trim().toLowerCase();
                 final list =
-                    snap.data!.where((p) => q.isEmpty || p.nama.toLowerCase().contains(q)).toList();
+                snap.data!.where((p) => q.isEmpty || p.nama.toLowerCase().contains(q)).toList();
                 return ListView(padding: const EdgeInsets.fromLTRB(20, 16, 20, 90), children: [
                   SearchField(hint: 'Cari nama...', onChanged: (v) => setState(() => _q = v)),
                   const SizedBox(height: 14),
@@ -66,11 +74,19 @@ class _AdminPasienState extends State<AdminPasien> {
                         title: Text(p.nama, style: const TextStyle(fontWeight: FontWeight.w600)),
                         subtitle: Text(
                             '${p.usia} • ${p.jenisKelamin == 'L' ? 'Laki-laki' : 'Perempuan'}'
-                            '${p.orangTuaId == null ? ' • belum ditautkan' : ''}',
+                                '${p.orangTuaId == null ? ' • belum ditautkan' : ''}',
                             style: const TextStyle(fontSize: 12)),
-                        trailing: p.pending
-                            ? const Icon(Icons.cloud_off, size: 18, color: AppColors.muted)
-                            : const Icon(Icons.chevron_right),
+                        trailing: Row(mainAxisSize: MainAxisSize.min, children: [
+                          IconButton(
+                            tooltip: 'Edit pasien',
+                            visualDensity: VisualDensity.compact,
+                            icon: const Icon(Icons.edit_outlined, size: 20, color: AppColors.muted),
+                            onPressed: () => _edit(p),
+                          ),
+                          p.pending
+                              ? const Icon(Icons.cloud_off, size: 18, color: AppColors.muted)
+                              : const Icon(Icons.chevron_right),
+                        ]),
                         onTap: () => Navigator.push(
                           context,
                           MaterialPageRoute(

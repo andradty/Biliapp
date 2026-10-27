@@ -5,6 +5,7 @@ import '../../models/kalibrasi.dart';
 import '../../services/data_service.dart';
 import '../../theme.dart';
 import '../../widgets/common.dart';
+import 'kalibrasi_screen.dart';
 
 /// Batas umur kalibrasi sebelum diberi peringatan. NILAI SEMENTARA:
 /// sesuaikan dengan kebijakan kalibrasi dari tim hardware/dosen mitra.
@@ -81,7 +82,7 @@ class _KartuInfoAlatState extends State<KartuInfoAlat> {
               style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
           const SizedBox(height: 6),
           if (d.kalibrasiAktifId == null)
-            const Text('Belum ada kalibrasi aktif. Isi kalibrasi_aktif_id pada dokumen alat.',
+            const Text('Belum ada kalibrasi aktif. Catat atau pilih kalibrasi lewat tombol di bawah.',
                 style: TextStyle(color: AppColors.muted, fontSize: 13))
           else
             StreamBuilder<Kalibrasi?>(
@@ -123,6 +124,16 @@ class _KartuInfoAlatState extends State<KartuInfoAlat> {
                 ]);
               },
             ),
+          const SizedBox(height: 10),
+          Align(
+            alignment: Alignment.centerRight,
+            child: OutlinedButton.icon(
+              onPressed: () => Navigator.push(
+                  context, MaterialPageRoute(builder: (_) => KalibrasiScreen(svc: widget.svc))),
+              icon: const Icon(Icons.tune, size: 18),
+              label: const Text('Kelola Kalibrasi'),
+            ),
+          ),
         ]);
       },
     );

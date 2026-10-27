@@ -34,7 +34,7 @@ class Pemeriksaan {
     required this.hasil,
     required this.status,
     required this.puskesmasId,
-    this.satuan = 'mg/dL',
+    this.satuan = '%',
     this.orangTuaId,
     this.pengukuran = const {},
     this.pending = false,
@@ -56,7 +56,7 @@ class Pemeriksaan {
       waktu: toDate(m['waktu_pemeriksaan']) ?? DateTime.now(),
       hasil: ((m['hasil_bilirubin'] ?? 0) as num).toDouble(),
       // dokumen lama (mis. ses_001) belum punya `satuan`
-      satuan: (m['satuan'] ?? 'mg/dL') as String,
+      satuan: (m['satuan'] ?? '%') as String,
       status: (m['status_hasil'] ?? '') as String,
       puskesmasId: (m['puskesmas_id'] ?? '') as String,
       orangTuaId: m['orang_tua_id'] as String?,
