@@ -3,8 +3,8 @@
 /// Angka batas masih SEMENTARA sampai ditetapkan tim medis/dosen pembimbing;
 /// cukup ubah di sini. Jangan dipakai sebagai dasar keputusan klinis sebelum divalidasi.
 class AmbangStatus {
-  static const double waspada = 50.0; // TODO konfirmasi
-  static const double kritis = 75.0; // TODO konfirmasi
+  static const double waspada = 50.0;
+  static const double kritis = 75.0;
 
   /// Batas yang sama dengan Firestore rules (0-100 untuk satuan %).
   static const double maks = 100.0;

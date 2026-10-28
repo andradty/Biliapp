@@ -333,13 +333,18 @@ class DataService {
       (s.docs.map(Agenda.fromDoc).where((a) => a.mendatang).toList()
         ..sort((a, b) => a.tanggal.compareTo(b.tanggal)));
 
-  /// Petugas: jadwal mendatang satu pasien.
+  /// Petugas: semua jadwal aktif (termasuk yang terlewat) agar bisa dijadwalkan ulang.
+  List<Agenda> _agendaPetugas(QuerySnapshot<Map<String, dynamic>> s) =>
+      (s.docs.map(Agenda.fromDoc).where((a) => a.status == 'dijadwalkan').toList()
+        ..sort((a, b) => a.tanggal.compareTo(b.tanggal)));
+
+  /// Petugas: jadwal aktif satu pasien (mendatang + terlewat).
   Stream<List<Agenda>> agendaPasien(String pasienId) => _db
       .collection('agenda')
       .where('puskesmas_id', isEqualTo: user.puskesmasId)
       .where('pasien_id', isEqualTo: pasienId)
       .snapshots(includeMetadataChanges: true)
-      .map(_agenda);
+      .map(_agendaPetugas);
 
   /// Orang Tua: jadwal mendatang semua anaknya.
   Stream<List<Agenda>> agendaAnak() => _db

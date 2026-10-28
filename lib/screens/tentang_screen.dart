@@ -60,7 +60,7 @@ class TentangScreen extends StatelessWidget {
                 ),
               ])),
               SectionLabel('Tim $kNamaKelompok'),
-              _kartu(Text('$kInstitusi',
+              _kartu(Text('kInstitusi',
                   style: const TextStyle(fontSize: 13, color: AppColors.muted))),
               for (final e in kAnggotaTim.entries)
                 Container(

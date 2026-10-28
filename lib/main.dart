@@ -11,9 +11,10 @@ import 'screens/splash_screen.dart';
 import 'services/auth_service.dart';
 import 'theme.dart';
 
-Future<void> main() async {
+void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  // runApp LANGSUNG (tanpa await Firebase) agar frame pertama = splash,
+  // bukan layar hitam bawaan sistem selama Firebase menyala.
   runApp(const BiliCheckApp());
 }
 
@@ -29,7 +30,9 @@ class BiliCheckApp extends StatelessWidget {
       );
 }
 
-/// Splash minimal ~2 detik di atas AuthGate, lalu memudar.
+/// Splash minimal ~1,8 detik sambil Firebase dinyalakan dan status login dibaca.
+/// AuthGate baru dibangun setelah semuanya siap, jadi tidak ada beban build
+/// landing page yang menumpuk di bawah animasi splash.
 class _Boot extends StatefulWidget {
   const _Boot();
 
@@ -38,36 +41,71 @@ class _Boot extends StatefulWidget {
 }
 
 class _BootState extends State<_Boot> {
-  bool _tampil = true;
-  bool _hilang = false;
+  late Future<void> _siap = _mulai();
 
-  @override
-  void initState() {
-    super.initState();
-    Future.delayed(const Duration(milliseconds: 2000), () {
-      if (mounted) setState(() => _tampil = false);
-    });
+  Future<void> _mulai() async {
+    final minimal = Future<void>.delayed(const Duration(milliseconds: 1800));
+    await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+    // Tunggu status login pertama supaya AuthGate tidak menampilkan loading kedua.
+    await FirebaseAuth.instance.authStateChanges().first;
+    await minimal;
   }
+
+  void _ulang() => setState(() => _siap = _mulai());
 
   @override
   Widget build(BuildContext context) {
-    return Stack(children: [
-      const AuthGate(),
-      if (!_hilang)
-        Positioned.fill(
-          child: IgnorePointer(
-            ignoring: !_tampil,
-            child: AnimatedOpacity(
-              opacity: _tampil ? 1 : 0,
-              duration: const Duration(milliseconds: 450),
-              onEnd: () {
-                if (!_tampil && mounted) setState(() => _hilang = true);
-              },
-              child: const SplashScreen(),
-            ),
+    return FutureBuilder<void>(
+      future: _siap,
+      builder: (context, snap) {
+        final Widget isi;
+        if (snap.hasError) {
+          isi = _GagalBoot(key: const ValueKey('gagal'), error: snap.error!, onUlang: _ulang);
+        } else if (snap.connectionState == ConnectionState.done) {
+          isi = const AuthGate(key: ValueKey('app'));
+        } else {
+          isi = const SplashScreen(key: ValueKey('splash'));
+        }
+        return AnimatedSwitcher(
+          duration: const Duration(milliseconds: 350),
+          child: isi,
+        );
+      },
+    );
+  }
+}
+
+class _GagalBoot extends StatelessWidget {
+  final Object error;
+  final VoidCallback onUlang;
+  const _GagalBoot({super.key, required this.error, required this.onUlang});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Container(
+        decoration: bgGradient,
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(32),
+            child: Column(mainAxisSize: MainAxisSize.min, children: [
+              const Icon(Icons.cloud_off, size: 48, color: AppColors.teal),
+              const SizedBox(height: 16),
+              const Text('Aplikasi gagal dimulai',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+              const SizedBox(height: 8),
+              Text('$error',
+                  textAlign: TextAlign.center,
+                  maxLines: 4,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(color: AppColors.muted, fontSize: 12.5)),
+              const SizedBox(height: 20),
+              FilledButton(onPressed: onUlang, child: const Text('Coba lagi')),
+            ]),
           ),
         ),
-    ]);
+      ),
+    );
   }
 }
 
@@ -84,10 +122,9 @@ class AuthGate extends StatelessWidget {
   Widget build(BuildContext context) {
     return StreamBuilder<User?>(
       stream: _svc.authChanges,
+      // Status login sudah dibaca di _Boot, jadi tidak ada keadaan "menunggu" di sini.
+      initialData: FirebaseAuth.instance.currentUser,
       builder: (context, snap) {
-        if (snap.connectionState == ConnectionState.waiting) {
-          return const SplashScreen();
-        }
         final user = snap.data;
         if (user == null) return GuestFlow(key: _guestKey);
 
@@ -95,6 +132,10 @@ class AuthGate extends StatelessWidget {
           stream: _svc.profil(user.uid),
           builder: (context, ps) {
             final doc = ps.data;
+            // Profil belum terbaca: tahan di loading (tanpa kedip landing page).
+            if (doc == null && ps.connectionState == ConnectionState.waiting) {
+              return const SplashScreen(langsung: true);
+            }
             if (doc == null || !doc.exists) return GuestFlow(key: _guestKey);
             return HomeScreen(user: AppUser.fromMap(user.uid, doc.data()!));
           },

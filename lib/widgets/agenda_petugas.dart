@@ -37,11 +37,13 @@ class _AgendaPasienSectionState extends State<AgendaPasienSection> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (c) => AlertDialog(
-        title: const Text('Batalkan jadwal?'),
-        content: Text('Jadwal ${fmtTanggal(a.tanggal)} akan dibatalkan dan hilang dari aplikasi Orang Tua.'),
+        title: Text(a.terlewat ? 'Hapus jadwal terlewat?' : 'Batalkan jadwal?'),
+        content: Text(a.terlewat
+            ? 'Jadwal ${fmtTanggal(a.tanggal)} yang terlewat akan dihapus dari daftar.'
+            : 'Jadwal ${fmtTanggal(a.tanggal)} akan dibatalkan dan hilang dari aplikasi Orang Tua.'),
         actions: [
           TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Kembali')),
-          FilledButton(onPressed: () => Navigator.pop(c, true), child: const Text('Batalkan jadwal')),
+          FilledButton(onPressed: () => Navigator.pop(c, true), child: Text(a.terlewat ? 'Hapus' : 'Batalkan jadwal')),
         ],
       ),
     );
@@ -49,6 +51,21 @@ class _AgendaPasienSectionState extends State<AgendaPasienSection> {
     final messenger = ScaffoldMessenger.of(context);
     widget.svc.batalkanAgenda(a.id).catchError(
         (e) => messenger.showSnackBar(SnackBar(content: Text('Gagal membatalkan: $e'))));
+  }
+
+  Future<void> _jadwalkanUlang(Agenda lama) async {
+    final hasil = await showDialog<({DateTime tanggal, String catatan})>(
+      context: context,
+      builder: (_) => const _DialogJadwal(),
+    );
+    if (hasil == null || !mounted) return;
+    final messenger = ScaffoldMessenger.of(context);
+    widget.svc
+        .jadwalkan(pasien: widget.pasien, tanggal: hasil.tanggal, catatan: hasil.catatan)
+        .then((_) => widget.svc.batalkanAgenda(lama.id))
+        .catchError((e) =>
+            messenger.showSnackBar(SnackBar(content: Text('Gagal menjadwalkan ulang: $e'))));
+    messenger.showSnackBar(const SnackBar(content: Text('Jadwal diganti dengan tanggal baru.')));
   }
 
   @override
@@ -68,19 +85,32 @@ class _AgendaPasienSectionState extends State<AgendaPasienSection> {
                 decoration:
                     BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
                 child: Row(children: [
-                  const Icon(Icons.event, color: AppColors.teal),
+                  Icon(a.terlewat ? Icons.event_busy : Icons.event,
+                      color: a.terlewat ? Colors.red : AppColors.teal),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      Text('${fmtTanggal(a.tanggal)} • ${a.hariLagiLabel}',
-                          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+                      Text(
+                          a.terlewat
+                              ? '${fmtTanggal(a.tanggal)} • Terlewat ${a.hariTerlewat} hari'
+                              : '${fmtTanggal(a.tanggal)} • ${a.hariLagiLabel}',
+                          style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                              color: a.terlewat ? Colors.red : null)),
                       if (a.catatan.isNotEmpty)
                         Text(a.catatan,
                             style: const TextStyle(fontSize: 12.5, color: AppColors.muted)),
                     ]),
                   ),
+                  if (a.terlewat)
+                    IconButton(
+                      tooltip: 'Jadwalkan ulang',
+                      icon: const Icon(Icons.event_repeat, size: 20),
+                      onPressed: a.pending ? null : () => _jadwalkanUlang(a),
+                    ),
                   IconButton(
-                    tooltip: 'Batalkan jadwal',
+                    tooltip: a.terlewat ? 'Hapus jadwal terlewat' : 'Batalkan jadwal',
                     icon: const Icon(Icons.close, size: 20),
                     onPressed: a.pending ? null : () => _batalkan(a),
                   ),

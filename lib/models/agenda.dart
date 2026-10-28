@@ -43,6 +43,12 @@ class Agenda {
   /// Masih berlaku: tidak dibatalkan dan belum lewat.
   bool get mendatang => status == 'dijadwalkan' && !tanggal.isBefore(_awalHariIni);
 
+  /// Belum dibatalkan tapi tanggalnya sudah lewat (tidak ada pembatalan/penjadwalan ulang).
+  bool get terlewat => status == 'dijadwalkan' && tanggal.isBefore(_awalHariIni);
+
+  int get hariTerlewat =>
+      _awalHariIni.difference(DateTime(tanggal.year, tanggal.month, tanggal.day)).inDays;
+
   int get hariLagi =>
       DateTime(tanggal.year, tanggal.month, tanggal.day).difference(_awalHariIni).inDays;
 
