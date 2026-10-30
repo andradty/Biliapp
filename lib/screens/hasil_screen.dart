@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../models/pemeriksaan.dart';
 import '../services/data_service.dart';
+import '../services/pdf_hasil.dart';
 import '../theme.dart';
 import '../widgets/common.dart';
 import '../widgets/edukasi_card.dart';
@@ -17,6 +18,18 @@ class HasilScreen extends StatelessWidget {
   const HasilScreen({super.key, required this.p, required this.namaPasien, this.svc});
 
   bool get _bisaBatal => svc != null && svc!.user.isPetugas && !p.dibatalkan && !p.pending;
+
+  /// Ekspor PDF khusus Orang Tua (Petugas selalu membawa `svc`, Orang Tua tidak).
+  bool get _bisaEkspor => svc == null && !p.dibatalkan && !p.pending;
+
+  Future<void> _unduh(BuildContext context) async {
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      await PdfHasil.bagikan(p, namaPasien);
+    } catch (e) {
+      messenger.showSnackBar(SnackBar(content: Text('Gagal membuat PDF: $e')));
+    }
+  }
 
   Future<void> _batalkan(BuildContext context) async {
     final alasan = await showDialog<String>(
@@ -85,6 +98,19 @@ class HasilScreen extends StatelessWidget {
               else
                 EdukasiCard(status: p.status),
               const SizedBox(height: 24),
+              if (_bisaEkspor) ...[
+                OutlinedButton.icon(
+                  onPressed: () => _unduh(context),
+                  icon: const Icon(Icons.picture_as_pdf_rounded, size: 20),
+                  label: const Text('Unduh Laporan PDF'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.teal,
+                    side: const BorderSide(color: AppColors.teal),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
+                ),
+                const SizedBox(height: 12),
+              ],
               GradientButton(label: 'Selesai', onPressed: () => Navigator.maybePop(context)),
               if (_bisaBatal) ...[
                 const SizedBox(height: 12),

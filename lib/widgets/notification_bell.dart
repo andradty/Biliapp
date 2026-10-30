@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../models/app_user.dart';
 import '../models/pasien.dart';
@@ -7,9 +8,6 @@ import '../screens/hasil_screen.dart';
 import '../services/data_service.dart';
 import '../theme.dart';
 import 'common.dart';
-
-/// Id pemeriksaan yang sudah dibuka. Disimpan di memori (hilang saat app ditutup).
-final Set<String> _notifDibaca = <String>{};
 
 String _waktuRelatif(DateTime t) {
   final d = DateTime.now().difference(t);
@@ -34,6 +32,45 @@ class NotificationBell extends StatefulWidget {
 }
 
 class _NotificationBellState extends State<NotificationBell> {
+  /// Id pemeriksaan yang sudah dibaca, disimpan lokal per akun (bukan global),
+  /// jadi tetap ada setelah app ditutup / logout-login ulang di perangkat ini.
+  final Set<String> _dibaca = <String>{};
+  bool _siap = false; // false = belum selesai membaca penyimpanan lokal
+
+  String get _kunci => 'notif_dibaca_${widget.user.uid}';
+
+  @override
+  void initState() {
+    super.initState();
+    _muat();
+  }
+
+  Future<void> _muat() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      _dibaca.addAll(prefs.getStringList(_kunci) ?? const <String>[]);
+    } catch (_) {}
+    if (mounted) setState(() => _siap = true);
+  }
+
+  /// Sebelum siap dianggap sudah dibaca, supaya badge tidak berkedip muncul lalu hilang.
+  bool _sudah(String id) => !_siap || _dibaca.contains(id);
+
+  void _tandai(Iterable<String> ids) {
+    setState(() => _dibaca.addAll(ids));
+    _simpan();
+  }
+
+  Future<void> _simpan() async {
+    try {
+      while (_dibaca.length > 300) {
+        _dibaca.remove(_dibaca.first); // buang yang paling lama
+      }
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setStringList(_kunci, _dibaca.toList());
+    } catch (_) {}
+  }
+
   late final Stream<List<Pasien>> _pasien =
       widget.user.isPetugas ? widget.svc.pasienPuskesmas() : widget.svc.anakSaya();
   late final Stream<List<Pemeriksaan>> _periksa = widget.user.isPetugas
@@ -67,7 +104,7 @@ class _NotificationBellState extends State<NotificationBell> {
                 .toList();
           }
           items = items.take(10).toList();
-          final belum = items.where((e) => !_notifDibaca.contains(e.id)).length;
+          final belum = items.where((e) => !_sudah(e.id)).length;
 
           return PopupMenuButton<Object>(
             tooltip: 'Notifikasi',
@@ -78,9 +115,9 @@ class _NotificationBellState extends State<NotificationBell> {
             color: Colors.white,
             onSelected: (v) {
               if (v == 'baca_semua') {
-                setState(() => _notifDibaca.addAll(items.map((e) => e.id)));
+                _tandai(items.map((e) => e.id));
               } else if (v is Pemeriksaan) {
-                setState(() => _notifDibaca.add(v.id));
+                _tandai([v.id]);
                 Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -125,7 +162,7 @@ class _NotificationBellState extends State<NotificationBell> {
                         padding: const EdgeInsets.only(top: 6, right: 10),
                         child: CircleAvatar(
                           radius: 4,
-                          backgroundColor: _notifDibaca.contains(e.id)
+                          backgroundColor: _sudah(e.id)
                               ? Colors.transparent
                               : (e.dibatalkan ? AppColors.muted : statusColor(e.status)),
                         ),
@@ -142,7 +179,7 @@ class _NotificationBellState extends State<NotificationBell> {
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
                               color: AppColors.ink,
-                              fontWeight: _notifDibaca.contains(e.id)
+                              fontWeight: _sudah(e.id)
                                   ? FontWeight.w500
                                   : FontWeight.w700,
                             ),

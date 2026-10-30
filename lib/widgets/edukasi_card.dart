@@ -53,7 +53,7 @@ const _kritis = EdukasiTeks(
   ],
 );
 
-const _tandaBahaya = [
+const tandaBahaya = [
   'Bayi sangat mengantuk, lemas, atau sulit dibangunkan',
   'Bayi tidak mau menyusu atau sering muntah',
   'Demam, atau badan teraba sangat dingin',
@@ -140,7 +140,7 @@ class EdukasiCard extends StatelessWidget {
             ),
           ]),
           const SizedBox(height: 8),
-          for (final s in _tandaBahaya)
+          for (final s in tandaBahaya)
             Padding(
               padding: const EdgeInsets.only(bottom: 6),
               child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
