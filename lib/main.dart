@@ -44,9 +44,8 @@ class _BootState extends State<_Boot> {
   late Future<void> _siap = _mulai();
 
   Future<void> _mulai() async {
-    final minimal = Future<void>.delayed(const Duration(milliseconds: 1800));
+    final minimal = Future<void>.delayed(const Duration(milliseconds: 2600));
     await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-    // Tunggu status login pertama supaya AuthGate tidak menampilkan loading kedua.
     await FirebaseAuth.instance.authStateChanges().first;
     await minimal;
   }

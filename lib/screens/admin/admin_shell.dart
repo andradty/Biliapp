@@ -42,8 +42,8 @@ class _AdminShellState extends State<AdminShell> {
         onTap: (i) => setState(() => _i = i),
         items: const [
           NavItem(Icons.home_rounded, 'Home'),
-          NavItem(Icons.child_care, 'Pasien'),
-          NavItem(Icons.settings_input_component, 'Alat'),
+          NavItem(Icons.child_care_rounded, 'Pasien'),
+          NavItem(Icons.tune_rounded, 'Alat'),
           NavItem(Icons.account_circle_outlined, 'Akun'),
         ],
       ),

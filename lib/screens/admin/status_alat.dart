@@ -10,8 +10,7 @@ import '../../theme.dart';
 import '../../widgets/common.dart';
 import 'mulai_pemeriksaan_screen.dart' show kBatasStaleDetik;
 
-/// Indikator koneksi alat di tab Alat. "Terhubung" hanya jika counter `n` pada
-/// `devices/{id}/live` berubah dalam [kBatasStaleDetik] detik terakhir.
+/// Indikator koneksi alat di tab Alat. Menampilkan status MQTT & ESP32.
 class StatusAlatBar extends StatefulWidget {
   final DataService svc;
   const StatusAlatBar({super.key, required this.svc});
@@ -76,7 +75,6 @@ class _StatusIsiState extends State<_StatusIsi> {
           _segar = null;
           return;
         }
-        // Event pertama = nilai lama; segar hanya kalau `n` berubah.
         if (_n != null && b.urut != _n) _segar = DateTime.now();
         _n = b.urut;
       });
@@ -100,15 +98,21 @@ class _StatusIsiState extends State<_StatusIsi> {
   Widget build(BuildContext context) {
     final Color warna;
     final String teks;
+    final String espStatus;
+    final bool espConnected = _hidup;
+
     if (_hidup) {
       warna = statusColor('normal');
       teks = 'Alat terhubung';
+      espStatus = 'Connected';
     } else if (_segar != null) {
       warna = statusColor('kritis');
       teks = 'Alat tidak mengirim data';
+      espStatus = 'Disconnected';
     } else {
       warna = AppColors.muted;
       teks = _n == null ? 'Belum ada data dari alat' : 'Menunggu data dari alat...';
+      espStatus = 'Waiting';
     }
 
     return Container(
@@ -123,6 +127,27 @@ class _StatusIsiState extends State<_StatusIsi> {
               child: Text('Status alat: $teks',
                   style: const TextStyle(fontWeight: FontWeight.w600))),
         ]),
+        const SizedBox(height: 12),
+        // Kotak Koneksi ESP & MQTT seperti di desain
+        Row(
+          children: [
+            Expanded(
+              child: _BadgeKoneksi(
+                title: 'MQTT',
+                status: _hidup ? 'Connected' : 'Offline',
+                connected: _hidup,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _BadgeKoneksi(
+                title: 'ESP32',
+                status: espStatus,
+                connected: espConnected,
+              ),
+            ),
+          ],
+        ),
         StreamBuilder<StatusAlat?>(
           stream: _status,
           builder: (context, snap) {
@@ -136,13 +161,73 @@ class _StatusIsiState extends State<_StatusIsi> {
             ];
             if (bagian.isEmpty) return const SizedBox.shrink();
             return Padding(
-              padding: const EdgeInsets.only(top: 6, left: 22),
+              padding: const EdgeInsets.only(top: 10, left: 4),
               child: Text(bagian.join(' • '),
                   style: const TextStyle(fontSize: 12, color: AppColors.muted)),
             );
           },
         ),
       ]),
+    );
+  }
+}
+
+class _BadgeKoneksi extends StatelessWidget {
+  final String title;
+  final String status;
+  final bool connected;
+
+  const _BadgeKoneksi({
+    required this.title,
+    required this.status,
+    required this.connected,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final statusColor = connected ? const Color(0xFF16A34A) : AppColors.muted;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF1F5F8),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 6,
+                height: 6,
+                decoration: BoxDecoration(
+                  color: connected ? const Color(0xFF16A34A) : AppColors.muted,
+                  shape: BoxShape.circle,
+                ),
+              ),
+              const SizedBox(width: 6),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w800,
+                  color: Color(0xFF64748B),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 2),
+          Text(
+            status,
+            style: TextStyle(
+              fontSize: 11.5,
+              fontWeight: FontWeight.w700,
+              color: statusColor,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 
 import '../services/auth_service.dart';
 import '../theme.dart';
@@ -24,7 +23,7 @@ class _AuthScreenState extends State<AuthScreen> {
   bool _busy = false;
   bool _hide = true;
   String? _error;
-  int _gagal = 0; // jumlah gagal login beruntun untuk email yang sama
+  int _gagal = 0;
   String _gagalEmail = '';
   bool _resetBusy = false;
 
@@ -46,9 +45,12 @@ class _AuthScreenState extends State<AuthScreen> {
     try {
       if (_register) {
         await _svc.register(
-            nama: _nama.text, nohp: _hp.text, email: _email.text, password: _pass.text);
+            nama: _nama.text.trim(),
+            nohp: _hp.text.trim(),
+            email: _email.text.trim(),
+            password: _pass.text);
       } else {
-        await _svc.login(_email.text, _pass.text);
+        await _svc.login(_email.text.trim(), _pass.text);
       }
     } catch (e) {
       if (mounted) {
@@ -104,9 +106,10 @@ class _AuthScreenState extends State<AuthScreen> {
       body: Container(
         decoration: bgGradient,
         child: SafeArea(
-          child: Center(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+            child: Align(
+              alignment: Alignment.topCenter,
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 420),
                 child: Form(
@@ -117,96 +120,159 @@ class _AuthScreenState extends State<AuthScreen> {
                       if (widget.onBack != null)
                         Align(
                           alignment: Alignment.centerLeft,
-                          child: IconButton(
-                            icon: const Icon(Icons.arrow_back),
-                            onPressed: widget.onBack,
+                          child: Container(
+                            width: 36,
+                            height: 32,
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.6),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: IconButton(
+                              padding: EdgeInsets.zero,
+                              icon: const Icon(Icons.arrow_back, color: AppColors.teal),
+                              onPressed: widget.onBack,
+                            ),
                           ),
                         ),
-                      SvgPicture.asset('assets/logo.svg', height: 110),
-                      const SizedBox(height: 32),
-                      _Segment(register: _register, onChanged: _setMode),
                       const SizedBox(height: 8),
-                      if (_register) ...[
-                        _Field(
-                          label: 'Full Name',
-                          controller: _nama,
-                          action: TextInputAction.next,
-                          validator: (v) =>
-                              (v ?? '').trim().isEmpty ? 'Nama wajib diisi' : null,
+                      Center(
+                        child: Image.asset(
+                          'assets/logo-bilicheck.png',
+                          width: 248,
+                          fit: BoxFit.contain,
                         ),
-                        _Field(
-                          label: 'No. HP',
-                          controller: _hp,
-                          keyboard: TextInputType.phone,
-                          action: TextInputAction.next,
-                          validator: (v) => RegExp(r'^08\d{8,12}$')
-                                  .hasMatch((v ?? '').trim())
-                              ? null
-                              : 'Gunakan format 08xxxxxxxxxx',
-                        ),
-                      ],
-                      _Field(
-                        label: 'Email',
-                        controller: _email,
-                        keyboard: TextInputType.emailAddress,
-                        action: TextInputAction.next,
-                        validator: (v) => (v ?? '').contains('@') ? null : 'Email tidak valid',
                       ),
-                      _Field(
-                        label: 'Password',
-                        controller: _pass,
-                        obscure: _hide,
-                        action: TextInputAction.done,
-                        onSubmit: (_) => _submit(),
-                        suffix: IconButton(
-                          icon: Icon(_hide ? Icons.visibility_off : Icons.visibility),
-                          onPressed: () => setState(() => _hide = !_hide),
+                      const SizedBox(height: 24),
+                      _Segment(register: _register, onChanged: _setMode),
+                      const SizedBox(height: 18),
+                      AnimatedSize(
+                        duration: const Duration(milliseconds: 220),
+                        curve: Curves.easeOutCubic,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            if (_register) ...[
+                              _Field(
+                                label: 'Full Name',
+                                controller: _nama,
+                                action: TextInputAction.next,
+                                validator: (v) =>
+                                    (v ?? '').trim().isEmpty ? 'Nama wajib diisi' : null,
+                              ),
+                              _Field(
+                                label: 'No. HP (opsional untuk Orang Tua)',
+                                controller: _hp,
+                                keyboard: TextInputType.phone,
+                                action: TextInputAction.next,
+                              ),
+                            ],
+                            _Field(
+                              label: 'Email',
+                              controller: _email,
+                              keyboard: TextInputType.emailAddress,
+                              action: TextInputAction.next,
+                              validator: (v) {
+                                final s = (v ?? '').trim();
+                                if (s.isEmpty) return 'Email wajib diisi';
+                                if (!s.contains('@')) return 'Format email tidak valid';
+                                return null;
+                              },
+                            ),
+                            _Field(
+                              label: 'Password',
+                              controller: _pass,
+                              obscure: _hide,
+                              action: TextInputAction.done,
+                              onSubmitted: (_) => _submit(),
+                              suffix: IconButton(
+                                icon: Icon(
+                                  _hide ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                                  color: AppColors.muted,
+                                  size: 20,
+                                ),
+                                onPressed: () => setState(() => _hide = !_hide),
+                              ),
+                              validator: (v) {
+                                final s = v ?? '';
+                                if (s.isEmpty) return 'Password wajib diisi';
+                                if (_register && s.length < 6) {
+                                  return 'Minimal 6 karakter';
+                                }
+                                return null;
+                              },
+                            ),
+                          ],
                         ),
-                        validator: (v) =>
-                            (v ?? '').length >= 6 ? null : 'Minimal 6 karakter',
                       ),
                       if (!_register)
                         Align(
                           alignment: Alignment.centerRight,
                           child: TextButton(
                             onPressed: _resetBusy ? null : _lupaPassword,
-                            child: Text(_resetBusy ? 'Mengirim...' : 'Lupa password?'),
+                            style: TextButton.styleFrom(
+                              padding: const EdgeInsets.only(top: 2, bottom: 6),
+                              minimumSize: Size.zero,
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            ),
+                            child: _resetBusy
+                                ? const SizedBox(
+                                    width: 14,
+                                    height: 14,
+                                    child: CircularProgressIndicator(strokeWidth: 2),
+                                  )
+                                : const Text(
+                                    'Lupa password?',
+                                    style: TextStyle(
+                                      color: AppColors.teal,
+                                      fontSize: 12.5,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
                           ),
                         ),
-                      const SizedBox(height: 8),
+                      if (_error != null) ...[
+                        const SizedBox(height: 8),
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFFEBEE),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                _error!,
+                                style: const TextStyle(
+                                  color: Color(0xFFC62828),
+                                  fontSize: 13,
+                                ),
+                              ),
+                              if (!_register && _gagal >= 2) ...[
+                                const SizedBox(height: 6),
+                                InkWell(
+                                  onTap: _resetBusy ? null : _lupaPassword,
+                                  child: const Text(
+                                    'Lupa password akun ini? Kirim link reset.',
+                                    style: TextStyle(
+                                      color: Color(0xFFB71C1C),
+                                      fontSize: 12.5,
+                                      fontWeight: FontWeight.w700,
+                                      decoration: TextDecoration.underline,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                      ],
+                      const SizedBox(height: 18),
                       _GradientButton(
                         label: _register ? 'Daftar' : 'Masuk',
                         busy: _busy,
                         onPressed: _busy ? null : _submit,
                       ),
-                      if (_error != null)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 14),
-                          child: Text(_error!,
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(color: Color(0xFFC62828), fontSize: 13)),
-                        ),
-                      if (!_register && _gagal >= 3)
-                        Container(
-                          margin: const EdgeInsets.only(top: 14),
-                          padding: const EdgeInsets.all(14),
-                          decoration: BoxDecoration(
-                              color: const Color(0xFFFFF3E0),
-                              borderRadius: BorderRadius.circular(14)),
-                          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                            Text('Sudah $_gagal kali gagal masuk. Lupa password?',
-                                style: TextStyle(fontWeight: FontWeight.w600)),
-                            const SizedBox(height: 4),
-                            const Text(
-                                'Kami bisa mengirim link untuk membuat password baru ke email di atas.',
-                                style: TextStyle(fontSize: 12.5, height: 1.4)),
-                            const SizedBox(height: 6),
-                            TextButton(
-                              onPressed: _resetBusy ? null : _lupaPassword,
-                              child: const Text('Kirim link reset password'),
-                            ),
-                          ]),
-                        ),
                     ],
                   ),
                 ),
@@ -226,36 +292,79 @@ class _Segment extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Widget tab(String t, bool reg) {
-      final on = register == reg;
-      return Expanded(
-        child: GestureDetector(
-          onTap: () => onChanged(reg),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 180),
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            decoration: BoxDecoration(
-              color: on ? Colors.white : Colors.transparent,
-              borderRadius: BorderRadius.circular(999),
-              boxShadow: on
-                  ? const [BoxShadow(color: Color(0x22000000), blurRadius: 6, offset: Offset(0, 2))]
-                  : null,
-            ),
-            child: Text(t,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                    fontWeight: FontWeight.w500,
-                    color: on ? AppColors.teal : AppColors.muted)),
-          ),
-        ),
-      );
-    }
-
     return Container(
+      height: 50,
       padding: const EdgeInsets.all(5),
       decoration: BoxDecoration(
-          color: const Color(0xFFE3E3E3), borderRadius: BorderRadius.circular(999)),
-      child: Row(children: [tab('Register', true), tab('Login', false)]),
+        color: const Color(0xFFE1E3E5),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: GestureDetector(
+              onTap: () => onChanged(true),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                curve: Curves.easeOutCubic,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: register ? Colors.white : Colors.transparent,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: register
+                      ? const [
+                          BoxShadow(
+                            color: Color(0x1F000000),
+                            blurRadius: 6,
+                            offset: Offset(0, 2),
+                          ),
+                        ]
+                      : null,
+                ),
+                child: Text(
+                  'Register',
+                  style: TextStyle(
+                    fontSize: 13.5,
+                    fontWeight: register ? FontWeight.w700 : FontWeight.w500,
+                    color: register ? const Color(0xFF0A6D88) : const Color(0xFF6E7781),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Expanded(
+            child: GestureDetector(
+              onTap: () => onChanged(false),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                curve: Curves.easeOutCubic,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: !register ? Colors.white : Colors.transparent,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: !register
+                      ? const [
+                          BoxShadow(
+                            color: Color(0x1F000000),
+                            blurRadius: 6,
+                            offset: Offset(0, 2),
+                          ),
+                        ]
+                      : null,
+                ),
+                child: Text(
+                  'Login',
+                  style: TextStyle(
+                    fontSize: 13.5,
+                    fontWeight: !register ? FontWeight.w700 : FontWeight.w500,
+                    color: !register ? const Color(0xFF0A6D88) : const Color(0xFF6E7781),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -263,56 +372,71 @@ class _Segment extends StatelessWidget {
 class _Field extends StatelessWidget {
   final String label;
   final TextEditingController controller;
-  final String? Function(String?)? validator;
+  final bool obscure;
   final TextInputType? keyboard;
   final TextInputAction? action;
-  final bool obscure;
+  final ValueChanged<String>? onSubmitted;
   final Widget? suffix;
-  final ValueChanged<String>? onSubmit;
+  final String? Function(String?)? validator;
 
   const _Field({
     required this.label,
     required this.controller,
-    this.validator,
+    this.obscure = false,
     this.keyboard,
     this.action,
-    this.obscure = false,
+    this.onSubmitted,
     this.suffix,
-    this.onSubmit,
+    this.validator,
   });
 
   @override
   Widget build(BuildContext context) {
-    final border = OutlineInputBorder(
-      borderRadius: BorderRadius.circular(16),
-      borderSide: const BorderSide(color: Color(0xFFDCE6EC)),
-    );
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(top: 14, bottom: 6),
-          child: Text(label, style: const TextStyle(fontSize: 15)),
-        ),
-        TextFormField(
-          controller: controller,
-          validator: validator,
-          keyboardType: keyboard,
-          textInputAction: action,
-          obscureText: obscure,
-          onFieldSubmitted: onSubmit,
-          decoration: InputDecoration(
-            filled: true,
-            fillColor: const Color(0xFFFAFAFA),
-            suffixIcon: suffix,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-            border: border,
-            enabledBorder: border,
-            focusedBorder: border.copyWith(
-                borderSide: const BorderSide(color: AppColors.teal2, width: 2)),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(left: 4, bottom: 6),
+            child: Text(
+              label,
+              style: const TextStyle(
+                fontSize: 13.5,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF232B38),
+              ),
+            ),
           ),
-        ),
-      ],
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: const Color(0xFFD9E2EC), width: 1.2),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: TextFormField(
+              controller: controller,
+              obscureText: obscure,
+              obscuringCharacter: '•',
+              keyboardType: keyboard,
+              textInputAction: action,
+              onFieldSubmitted: onSubmitted,
+              validator: validator,
+              style: const TextStyle(fontSize: 14.5, color: Color(0xFF1F2937)),
+              decoration: InputDecoration(
+                border: InputBorder.none,
+                enabledBorder: InputBorder.none,
+                focusedBorder: InputBorder.none,
+                errorBorder: InputBorder.none,
+                focusedErrorBorder: InputBorder.none,
+                contentPadding: const EdgeInsets.symmetric(vertical: 14),
+                suffixIcon: suffix,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -321,41 +445,48 @@ class _GradientButton extends StatelessWidget {
   final String label;
   final bool busy;
   final VoidCallback? onPressed;
-  const _GradientButton({required this.label, required this.busy, this.onPressed});
+  const _GradientButton({required this.label, this.busy = false, this.onPressed});
 
   @override
-  Widget build(BuildContext context) {
-    return Opacity(
-      opacity: onPressed == null ? 0.7 : 1,
-      child: Container(
+  Widget build(BuildContext context) => Container(
+        height: 52,
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(999),
-          gradient: const LinearGradient(colors: [AppColors.orange1, AppColors.orange2]),
-          boxShadow: const [
-            BoxShadow(color: Color(0x44FF8A00), blurRadius: 18, offset: Offset(0, 8))
+          gradient: const LinearGradient(
+            begin: Alignment.centerLeft,
+            end: Alignment.centerRight,
+            colors: [Color(0xFFFFAF36), Color(0xFFFF9800)],
+          ),
+          borderRadius: BorderRadius.circular(18),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFFFF9800).withValues(alpha: 0.35),
+              blurRadius: 14,
+              offset: const Offset(0, 6),
+            ),
           ],
         ),
         child: Material(
           color: Colors.transparent,
           child: InkWell(
-            borderRadius: BorderRadius.circular(999),
+            borderRadius: BorderRadius.circular(18),
             onTap: onPressed,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              child: Center(
-                child: busy
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                    : Text(label,
-                        style: const TextStyle(
-                            color: Colors.white, fontWeight: FontWeight.w600, fontSize: 16)),
-              ),
+            child: Center(
+              child: busy
+                  ? const SizedBox(
+                      width: 22,
+                      height: 22,
+                      child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
+                    )
+                  : Text(
+                      label,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 16,
+                      ),
+                    ),
             ),
           ),
         ),
-      ),
-    );
-  }
+      );
 }

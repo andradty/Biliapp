@@ -13,9 +13,9 @@ String fmtKadar(double v) => v.toStringAsFixed(1).replaceAll('.', ',');
 Color statusColor(String s) {
   switch (s) {
     case 'normal':
-      return const Color(0xFF17803D);
+      return const Color(0xFF16A34A);
     case 'waspada':
-      return AppColors.orange2;
+      return const Color(0xFFB45309);
     case 'kritis':
       return const Color(0xFFC62828);
     default:
@@ -38,27 +38,101 @@ String statusLabel(String s) {
   }
 }
 
+/// Header berlatar gradien teal dengan dekorasi lingkaran hijau elegan (sesuai Image 7 & 8)
 class GradientHeader extends StatelessWidget {
   final Widget child;
-  const GradientHeader({super.key, required this.child});
+  final bool showLeftCircle;
+  final double bottomRadius;
+  final EdgeInsetsGeometry? padding;
+
+  const GradientHeader({
+    super.key,
+    required this.child,
+    this.showLeftCircle = false,
+    this.bottomRadius = 28,
+    this.padding,
+  });
 
   @override
-  Widget build(BuildContext context) => Container(
+  Widget build(BuildContext context) {
+    final topPadding = MediaQuery.of(context).padding.top;
+    return ClipRRect(
+      borderRadius: BorderRadius.vertical(bottom: Radius.circular(bottomRadius)),
+      child: Container(
         width: double.infinity,
-        padding: EdgeInsets.fromLTRB(20, MediaQuery.of(context).padding.top + 14, 20, 22),
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [AppColors.teal, AppColors.teal2],
+            colors: [Color(0xFF075F78), Color(0xFF0E85A5)],
           ),
-          borderRadius: BorderRadius.vertical(bottom: Radius.circular(28)),
         ),
-        child: child,
-      );
+        child: Stack(
+          children: [
+            // Lingkaran dekoratif hijau di kanan atas (persis Image 7 & Image 8)
+            Positioned(
+              right: -32,
+              top: -36,
+              child: Container(
+                width: 155,
+                height: 155,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: const Color(0xFF6E9E82).withValues(alpha: 0.55),
+                ),
+              ),
+            ),
+            Positioned(
+              right: 6,
+              top: 2,
+              child: Container(
+                width: 96,
+                height: 96,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: const Color(0xFF86B396).withValues(alpha: 0.42),
+                ),
+              ),
+            ),
+            if (showLeftCircle) ...[
+              Positioned(
+                left: -30,
+                bottom: -32,
+                child: Container(
+                  width: 110,
+                  height: 110,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: const Color(0xFF6E9E82).withValues(alpha: 0.48),
+                  ),
+                ),
+              ),
+              Positioned(
+                left: -10,
+                bottom: -16,
+                child: Container(
+                  width: 72,
+                  height: 72,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: const Color(0xFF86B396).withValues(alpha: 0.35),
+                  ),
+                ),
+              ),
+            ],
+            Padding(
+              padding: padding ??
+                  EdgeInsets.fromLTRB(20, topPadding + 12, 20, 22),
+              child: child,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
-/// Header halaman dalam: tombol kembali + judul.
+/// Header halaman dalam: tombol kembali + judul (sesuai Image 8)
 class SubHeader extends StatelessWidget {
   final String title;
   final Widget? bottom;
@@ -69,19 +143,33 @@ class SubHeader extends StatelessWidget {
         child: Column(
           children: [
             Row(children: [
-              IconButton(
-                icon: const Icon(Icons.arrow_back, color: Colors.white),
-                onPressed: () => Navigator.maybePop(context),
+              Container(
+                width: 36,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.22),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: IconButton(
+                  padding: EdgeInsets.zero,
+                  icon: const Icon(Icons.arrow_back, color: Colors.white, size: 20),
+                  onPressed: () => Navigator.maybePop(context),
+                ),
               ),
               Expanded(
-                child: Text(title,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                        color: Colors.white, fontSize: 18, fontWeight: FontWeight.w700)),
+                child: Text(
+                  title,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 18.5,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
               ),
-              const SizedBox(width: 48),
+              const SizedBox(width: 36),
             ]),
-            if (bottom != null) ...[const SizedBox(height: 8), bottom!],
+            if (bottom != null) ...[const SizedBox(height: 12), bottom!],
           ],
         ),
       );
@@ -94,26 +182,39 @@ class StatusBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final c = statusColor(status);
+    final isWarn = status == 'waspada';
+    final bg = isWarn ? const Color(0xFFFDEACC) : const Color(0xFFDCFCE7);
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 3.5),
       decoration: BoxDecoration(
-          color: c.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(999)),
-      child: Text(statusLabel(status),
-          style: TextStyle(color: c, fontSize: 11, fontWeight: FontWeight.w600)),
+        color: bg,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        statusLabel(status),
+        style: TextStyle(color: c, fontSize: 11, fontWeight: FontWeight.w700),
+      ),
     );
   }
 }
 
 class BabyAvatar extends StatelessWidget {
   final double size;
-  const BabyAvatar({super.key, this.size = 44});
+  const BabyAvatar({super.key, this.size = 46});
 
   @override
   Widget build(BuildContext context) => Container(
         width: size,
         height: size,
-        decoration: const BoxDecoration(shape: BoxShape.circle, color: Color(0xFFFFE3B8)),
-        child: Icon(Icons.child_care, color: AppColors.orange2, size: size * 0.6),
+        decoration: const BoxDecoration(
+          shape: BoxShape.circle,
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFFEBF4EC), Color(0xFFF6EBD8)],
+          ),
+        ),
+        child: Icon(Icons.child_care_rounded, color: AppColors.orange2, size: size * 0.65),
       );
 }
 
@@ -124,8 +225,15 @@ class SectionLabel extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Padding(
         padding: const EdgeInsets.only(top: 18, bottom: 10),
-        child: Text(text,
-            style: const TextStyle(fontWeight: FontWeight.w600, color: AppColors.muted)),
+        child: Text(
+          text,
+          style: const TextStyle(
+            fontWeight: FontWeight.w800,
+            fontSize: 12.5,
+            color: Color(0xFF758290),
+            letterSpacing: 0.3,
+          ),
+        ),
       );
 }
 
@@ -135,16 +243,34 @@ class SearchField extends StatelessWidget {
   const SearchField({super.key, required this.hint, required this.onChanged});
 
   @override
-  Widget build(BuildContext context) => TextField(
-        onChanged: onChanged,
-        decoration: InputDecoration(
-          hintText: hint,
-          prefixIcon: const Icon(Icons.search),
-          filled: true,
-          fillColor: Colors.white,
-          contentPadding: const EdgeInsets.symmetric(vertical: 0),
-          border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+  Widget build(BuildContext context) => Container(
+        height: 48,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: const Color(0xFFDCE4EC)),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Row(
+          children: [
+            const Icon(Icons.search, color: Color(0xFF9AA5B1), size: 22),
+            const SizedBox(width: 8),
+            Expanded(
+              child: TextField(
+                onChanged: onChanged,
+                style: const TextStyle(fontSize: 14, color: AppColors.ink),
+                decoration: InputDecoration(
+                  hintText: hint,
+                  hintStyle: const TextStyle(color: Color(0xFF9AA5B1), fontSize: 14),
+                  border: InputBorder.none,
+                  enabledBorder: InputBorder.none,
+                  focusedBorder: InputBorder.none,
+                  isDense: true,
+                  contentPadding: EdgeInsets.zero,
+                ),
+              ),
+            ),
+          ],
         ),
       );
 }
@@ -153,29 +279,36 @@ class ErrorBox extends StatelessWidget {
   final Object error;
   const ErrorBox(this.error, {super.key});
 
-  // Pesan error Firestore memuat tautan pembuatan indeks, jadi dibuat bisa disalin.
   @override
-  Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.all(16),
-        child: SelectableText('Gagal memuat data:\n$error',
-            style: const TextStyle(color: Color(0xFFC62828), fontSize: 12)),
+  Widget build(BuildContext context) => Container(
+        padding: const EdgeInsets.all(12),
+        margin: const EdgeInsets.only(bottom: 12),
+        decoration: BoxDecoration(
+            color: const Color(0xFFFFEBEE), borderRadius: BorderRadius.circular(12)),
+        child: Text('Terjadi kesalahan: $error',
+            style: const TextStyle(color: Color(0xFFC62828), fontSize: 13)),
       );
 }
 
 class GradientButton extends StatelessWidget {
   final String label;
   final VoidCallback? onPressed;
-  const GradientButton({super.key, required this.label, this.onPressed});
+  final double? width;
+  const GradientButton({super.key, required this.label, required this.onPressed, this.width});
 
   @override
-  Widget build(BuildContext context) => Opacity(
-        opacity: onPressed == null ? 0.6 : 1,
-        child: Container(
+  Widget build(BuildContext context) => SizedBox(
+        width: width ?? double.infinity,
+        child: DecoratedBox(
           decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              begin: Alignment.centerLeft,
+              end: Alignment.centerRight,
+              colors: [AppColors.orange1, AppColors.orange2],
+            ),
             borderRadius: BorderRadius.circular(999),
-            gradient: const LinearGradient(colors: [AppColors.orange1, AppColors.orange2]),
             boxShadow: const [
-              BoxShadow(color: Color(0x44FF8A00), blurRadius: 18, offset: Offset(0, 8))
+              BoxShadow(color: Color(0x33FF8A00), blurRadius: 16, offset: Offset(0, 6))
             ],
           ),
           child: Material(
@@ -188,7 +321,7 @@ class GradientButton extends StatelessWidget {
                 child: Center(
                   child: Text(label,
                       style: const TextStyle(
-                          color: Colors.white, fontWeight: FontWeight.w600, fontSize: 16)),
+                          color: Colors.white, fontWeight: FontWeight.w700, fontSize: 16)),
                 ),
               ),
             ),
@@ -211,42 +344,53 @@ class BottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-        decoration: const BoxDecoration(color: Colors.white, boxShadow: [
-          BoxShadow(color: Color(0x14000000), blurRadius: 12, offset: Offset(0, -2))
-        ]),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
+          boxShadow: [
+            BoxShadow(color: Color(0x14000000), blurRadius: 12, offset: Offset(0, -2))
+          ],
+        ),
         child: SafeArea(
           top: false,
-          child: Row(children: [
-            for (var i = 0; i < items.length; i++)
-              Expanded(
-                child: InkWell(
-                  onTap: () => onTap(i),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    child: Column(mainAxisSize: MainAxisSize.min, children: [
-                      Icon(items[i].icon, color: i == index ? AppColors.teal : AppColors.muted),
-                      const SizedBox(height: 2),
-                      Text(items[i].label,
-                          style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: i == index ? FontWeight.w700 : FontWeight.w400,
-                              color: i == index ? AppColors.teal : AppColors.muted)),
-                    ]),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+            child: Row(children: [
+              for (var i = 0; i < items.length; i++)
+                Expanded(
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(12),
+                    onTap: () => onTap(i),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 6),
+                      child: Column(mainAxisSize: MainAxisSize.min, children: [
+                        Icon(items[i].icon,
+                            size: 28,
+                            color: i == index ? AppColors.teal : const Color(0xFF757575)),
+                        const SizedBox(height: 2),
+                        Text(items[i].label,
+                            style: TextStyle(
+                                fontSize: 11.5,
+                                fontWeight: i == index ? FontWeight.w800 : FontWeight.w600,
+                                color: i == index ? AppColors.teal : const Color(0xFF757575))),
+                      ]),
+                    ),
                   ),
                 ),
-              ),
-          ]),
+            ]),
+          ),
         ),
       );
 }
 
-/// Kartu pemeriksaan: dipakai di Home (dengan nama) dan Riwayat (dengan tanggal).
+/// Kartu pemeriksaan dengan garis aksen oranye/gradien di sisi kiri seperti Image 4 & 5
 class PemeriksaanTile extends StatelessWidget {
   final Pemeriksaan p;
   final String title;
   final String? subtitle;
   final bool avatar;
   final VoidCallback? onTap;
+
   const PemeriksaanTile({
     super.key,
     required this.p,
@@ -258,54 +402,90 @@ class PemeriksaanTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final c = statusColor(p.dibatalkan ? 'dibatalkan' : p.status);
+    final c = statusColor(p.status);
+    final isWarn = p.status == 'waspada';
     return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      clipBehavior: Clip.antiAlias,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: const [BoxShadow(color: Color(0x120B7A93), blurRadius: 12, offset: Offset(0, 4))],
-      ),
-      child: InkWell(
-        onTap: onTap,
-        child: IntrinsicHeight(
-          child: Row(children: [
-            Container(width: 6, color: c),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Row(children: [
-                  if (avatar) ...[const BabyAvatar(size: 42), const SizedBox(width: 12)],
-                  Expanded(
-                    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      Text(title,
-                          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
-                      const SizedBox(height: 3),
-                      Row(children: [
-                        if (subtitle != null)
-                          Text('$subtitle  •  ',
-                              style: const TextStyle(fontSize: 12, color: AppColors.muted)),
-                        Text('${fmtKadar(p.hasil)} ${p.satuan}',
-                            style: TextStyle(
-                                fontSize: 12.5,
-                                fontWeight: FontWeight.w700,
-                                color: c,
-                                decoration:
-                                    p.dibatalkan ? TextDecoration.lineThrough : null)),
-                      ]),
-                    ]),
-                  ),
-                  if (p.pending)
-                    const Padding(
-                      padding: EdgeInsets.only(right: 8),
-                      child: Icon(Icons.cloud_off, size: 16, color: AppColors.muted),
+      margin: const EdgeInsets.only(bottom: 12),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(22),
+        child: Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            boxShadow: [
+              BoxShadow(color: Color(0x0A000000), blurRadius: 8, offset: Offset(0, 3)),
+            ],
+          ),
+          child: Material(
+            type: MaterialType.transparency,
+            child: InkWell(
+              onTap: onTap,
+              child: IntrinsicHeight(
+                child: Row(
+                  children: [
+                    Container(
+                      width: 9,
+                      decoration: BoxDecoration(
+                        color: isWarn ? const Color(0xFFDE9418) : const Color(0xFF6FA382),
+                      ),
                     ),
-                  StatusBadge(p.dibatalkan ? 'dibatalkan' : p.status),
-                ]),
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(14, 12, 16, 12),
+                        child: Row(
+                          children: [
+                            if (avatar) ...[
+                              const BabyAvatar(size: 52),
+                              const SizedBox(width: 14),
+                            ],
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    title,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 15,
+                                      color: AppColors.ink,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 3),
+                                  Row(
+                                    children: [
+                                      if (subtitle != null) ...[
+                                        Text(
+                                          '$subtitle  • ',
+                                          style: const TextStyle(
+                                            fontSize: 12.5,
+                                            color: Color(0xFF7B8AA0),
+                                          ),
+                                        ),
+                                      ],
+                                      Text(
+                                        '${fmtKadar(p.hasil)} ${p.satuan}',
+                                        style: TextStyle(
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.w800,
+                                          color: c,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 5),
+                                  StatusBadge(p.status),
+                                ],
+                              ),
+                            ),
+                            const Icon(Icons.chevron_right, color: Color(0xFFB0BEC5)),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-          ]),
+          ),
         ),
       ),
     );

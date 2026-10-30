@@ -30,7 +30,12 @@ class _UserShellState extends State<UserShell> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: IndexedStack(index: _i, children: [
-        UserHome(user: widget.user, svc: _svc, onLihatAnak: () => setState(() => _i = 1)),
+        UserHome(
+          user: widget.user,
+          svc: _svc,
+          onLihatAnak: () => setState(() => _i = 1),
+          onMulaiSkrining: () => setState(() => _i = 1),
+        ),
         UserAnak(svc: _svc),
         AkunScreen(user: widget.user),
       ]),
@@ -39,7 +44,7 @@ class _UserShellState extends State<UserShell> {
         onTap: (i) => setState(() => _i = i),
         items: const [
           NavItem(Icons.home_rounded, 'Home'),
-          NavItem(Icons.child_care, 'Anak'),
+          NavItem(Icons.child_care_rounded, 'Anak'),
           NavItem(Icons.account_circle_outlined, 'Akun'),
         ],
       ),

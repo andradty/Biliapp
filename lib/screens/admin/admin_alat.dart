@@ -27,8 +27,14 @@ class _AdminAlatState extends State<AdminAlat> {
       child: Column(children: [
         const GradientHeader(
           child: Center(
-            child: Text('Alat',
-                style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w700)),
+            child: Text(
+              'Alat',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 18.5,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
           ),
         ),
         Expanded(

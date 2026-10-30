@@ -42,7 +42,7 @@ class TentangScreen extends StatelessWidget {
             child: ListView(padding: const EdgeInsets.all(20), children: [
               const SectionLabel('Tentang BiliCheck'),
               _kartu(const Text(
-                'BiliCheck adalah alat pembaca kadar bilirubin non-invasif berbasis IoT untuk '
+                'BiliCheck adalah alat pembaca kadar bilirubin berbasis IoT untuk '
                 'membantu skrining bayi kuning (jaundice) di Puskesmas dan Posyandu. Hasil '
                 'pembacaan dikirim ke cloud dan dapat dipantau lewat aplikasi ini.',
                 style: TextStyle(height: 1.55, color: AppColors.muted),
