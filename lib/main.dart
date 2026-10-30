@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttersdk_wind/fluttersdk_wind.dart';
 
 import 'firebase_options.dart';
 import 'models/app_user.dart';
@@ -22,11 +23,14 @@ class BiliCheckApp extends StatelessWidget {
   const BiliCheckApp({super.key});
 
   @override
-  Widget build(BuildContext context) => MaterialApp(
-        title: 'BiliCheck',
-        debugShowCheckedModeBanner: false,
-        theme: buildTheme(),
-        home: const _Boot(),
+  Widget build(BuildContext context) => WindTheme(
+        data: buildWindTheme(),
+        builder: (context, controller) => MaterialApp(
+          title: 'BiliCheck',
+          debugShowCheckedModeBanner: false,
+          theme: buildTheme(), // tetap pakai theme lama selama migrasi
+          home: const _Boot(),
+        ),
       );
 }
 
