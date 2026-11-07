@@ -8,7 +8,9 @@ import 'akun_sheets.dart';
 
 class AkunScreen extends StatelessWidget {
   final AppUser user;
-  const AkunScreen({super.key, required this.user});
+  final VoidCallback? onBack;
+
+  const AkunScreen({super.key, required this.user, this.onBack});
 
   @override
   Widget build(BuildContext context) {
@@ -32,7 +34,13 @@ class AkunScreen extends StatelessWidget {
                 child: IconButton(
                   padding: EdgeInsets.zero,
                   icon: const Icon(Icons.arrow_back, color: Colors.white, size: 20),
-                  onPressed: () => Navigator.maybePop(context),
+                  onPressed: () {
+                    if (onBack != null) {
+                      onBack!();
+                    } else if (Navigator.canPop(context)) {
+                      Navigator.pop(context);
+                    }
+                  },
                 ),
               ),
             ),
@@ -68,26 +76,29 @@ class AkunScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 14),
+            // Edit Username / Nama saja
             _RowEdit(
               label: 'Username',
               value: user.nama,
-              onTap: () => bukaUbahProfil(context, user),
+              onTap: () => bukaUbahNama(context, user),
             ),
+            // Email: hanya ditampilkan, ikon edit dihilangkan
             _RowEdit(
               label: 'Email',
               value: user.email,
-              onTap: () => bukaUbahProfil(context, user),
+              bisaEdit: false,
             ),
+            // Edit Nomor Telepon saja
             _RowEdit(
               label: 'Nomor Telepon',
               value: user.nohp.isEmpty ? '-' : user.nohp,
-              onTap: () => bukaUbahProfil(context, user),
+              onTap: () => bukaUbahTelepon(context, user),
             ),
             if (user.isPetugas && (user.puskesmasId ?? '').isNotEmpty)
               _RowEdit(
                 label: 'Puskesmas',
                 value: user.puskesmasId!,
-                onTap: () => bukaUbahProfil(context, user),
+                bisaEdit: false,
               ),
             const SizedBox(height: 18),
             const Text(
@@ -103,15 +114,6 @@ class AkunScreen extends StatelessWidget {
               label: 'Password',
               value: '****************',
               onTap: () => bukaGantiPassword(context),
-            ),
-            const SizedBox(height: 8),
-            _SecurityLink(
-              title: 'Multi-Factor Authentication',
-              onTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Multi-Factor Authentication sudah aktif melalui Firebase Auth.')),
-                );
-              },
             ),
             const SizedBox(height: 28),
             SizedBox(
@@ -141,9 +143,15 @@ class AkunScreen extends StatelessWidget {
 class _RowEdit extends StatelessWidget {
   final String label;
   final String value;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
+  final bool bisaEdit;
 
-  const _RowEdit({required this.label, required this.value, required this.onTap});
+  const _RowEdit({
+    required this.label,
+    required this.value,
+    this.onTap,
+    this.bisaEdit = true,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -176,46 +184,16 @@ class _RowEdit extends StatelessWidget {
               ],
             ),
           ),
-          InkWell(
-            onTap: onTap,
-            borderRadius: BorderRadius.circular(6),
-            child: const Padding(
-              padding: EdgeInsets.all(4),
-              child: Icon(Icons.edit_square, size: 20, color: Color(0xFF1E1E1E)),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _SecurityLink extends StatelessWidget {
-  final String title;
-  final VoidCallback onTap;
-
-  const _SecurityLink({required this.title, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              title,
-              style: const TextStyle(
-                color: Color(0xFF0D748E),
-                fontSize: 13.5,
-                fontWeight: FontWeight.w800,
+          if (bisaEdit && onTap != null)
+            InkWell(
+              onTap: onTap,
+              borderRadius: BorderRadius.circular(6),
+              child: const Padding(
+                padding: EdgeInsets.all(4),
+                child: Icon(Icons.edit_square, size: 20, color: Color(0xFF1E1E1E)),
               ),
             ),
-            const Icon(Icons.chevron_right_rounded, size: 24, color: Color(0xFF1E1E1E)),
-          ],
-        ),
+        ],
       ),
     );
   }

@@ -2,14 +2,20 @@ import 'package:flutter/material.dart';
 
 import '../models/app_user.dart';
 import '../services/auth_service.dart';
-import '../theme.dart';
 import '../widgets/common.dart';
 
-void bukaUbahProfil(BuildContext context, AppUser user) => showModalBottomSheet(
+void bukaUbahNama(BuildContext context, AppUser user) => showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => _UbahProfilSheet(user: user),
+      builder: (_) => _UbahNamaSheet(user: user),
+    );
+
+void bukaUbahTelepon(BuildContext context, AppUser user) => showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _UbahTeleponSheet(user: user),
     );
 
 void bukaGantiPassword(BuildContext context) => showModalBottomSheet(
@@ -31,36 +37,51 @@ Widget _bungkus(BuildContext context, Widget isi) => Padding(
       ),
     );
 
-class _UbahProfilSheet extends StatefulWidget {
+/// Modal sheet khusus untuk mengubah Username / Nama saja
+class _UbahNamaSheet extends StatefulWidget {
   final AppUser user;
-  const _UbahProfilSheet({required this.user});
+  const _UbahNamaSheet({required this.user});
 
   @override
-  State<_UbahProfilSheet> createState() => _UbahProfilSheetState();
+  State<_UbahNamaSheet> createState() => _UbahNamaSheetState();
 }
 
-class _UbahProfilSheetState extends State<_UbahProfilSheet> {
+class _UbahNamaSheetState extends State<_UbahNamaSheet> {
   final _form = GlobalKey<FormState>();
   late final _nama = TextEditingController(text: widget.user.nama);
-  late final _hp = TextEditingController(text: widget.user.nohp);
+  bool _busy = false;
 
   @override
   void dispose() {
     _nama.dispose();
-    _hp.dispose();
     super.dispose();
   }
 
-  void _simpan() {
+  Future<void> _simpan() async {
     if (!(_form.currentState?.validate() ?? false)) return;
+    setState(() => _busy = true);
     final messenger = ScaffoldMessenger.of(context);
-    // Tidak di-await: saat offline masuk antrean lokal.
-    AuthService()
-        .ubahProfil(uid: widget.user.uid, nama: _nama.text, nohp: _hp.text)
-        .catchError((e) => messenger
-            .showSnackBar(SnackBar(content: Text(AuthService.pesanError(e)))));
-    messenger.showSnackBar(const SnackBar(content: Text('Profil diperbarui.')));
-    Navigator.pop(context);
+    try {
+      await AuthService().ubahProfil(
+        uid: widget.user.uid,
+        nama: _nama.text,
+        nohp: widget.user.nohp,
+      );
+      if (mounted) {
+        messenger.showSnackBar(
+          const SnackBar(content: Text('Nama berhasil diperbarui.')),
+        );
+        Navigator.pop(context);
+      }
+    } catch (e) {
+      if (mounted) {
+        messenger.showSnackBar(
+          SnackBar(content: Text(AuthService.pesanError(e))),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
   }
 
   @override
@@ -69,32 +90,122 @@ class _UbahProfilSheetState extends State<_UbahProfilSheet> {
       context,
       Form(
         key: _form,
-        child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-          const Text('Ubah Profil',
-              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 17)),
-          const SizedBox(height: 16),
-          TextFormField(
-            controller: _nama,
-            textCapitalization: TextCapitalization.words,
-            decoration:
-                const InputDecoration(labelText: 'Nama', border: OutlineInputBorder()),
-            validator: (v) => (v ?? '').trim().length >= 2 ? null : 'Nama minimal 2 karakter',
-          ),
-          const SizedBox(height: 12),
-          TextFormField(
-            controller: _hp,
-            keyboardType: TextInputType.phone,
-            decoration: const InputDecoration(
-                labelText: 'Nomor Telepon', hintText: '08xxxxxxxxxx', border: OutlineInputBorder()),
-            validator: (v) =>
-                RegExp(r'^08\d{8,12}$').hasMatch((v ?? '').trim()) ? null : 'Format 08xxxxxxxxxx',
-          ),
-          const SizedBox(height: 6),
-          const Text('Email tidak dapat diubah dari aplikasi.',
-              style: TextStyle(color: AppColors.muted, fontSize: 12)),
-          const SizedBox(height: 16),
-          GradientButton(label: 'Simpan', onPressed: _simpan),
-        ]),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Ubah Nama',
+              style: TextStyle(fontWeight: FontWeight.w800, fontSize: 17),
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: _nama,
+              autofocus: true,
+              textCapitalization: TextCapitalization.words,
+              decoration: const InputDecoration(
+                labelText: 'Username / Nama Lengkap',
+                border: OutlineInputBorder(),
+              ),
+              validator: (v) =>
+                  (v ?? '').trim().length >= 2 ? null : 'Nama minimal 2 karakter',
+            ),
+            const SizedBox(height: 20),
+            _busy
+                ? const Center(child: CircularProgressIndicator())
+                : GradientButton(label: 'Simpan Perubahan', onPressed: _simpan),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Modal sheet khusus untuk mengubah Nomor Telepon saja
+class _UbahTeleponSheet extends StatefulWidget {
+  final AppUser user;
+  const _UbahTeleponSheet({required this.user});
+
+  @override
+  State<_UbahTeleponSheet> createState() => _UbahTeleponSheetState();
+}
+
+class _UbahTeleponSheetState extends State<_UbahTeleponSheet> {
+  final _form = GlobalKey<FormState>();
+  late final _hp = TextEditingController(text: widget.user.nohp);
+  bool _busy = false;
+
+  @override
+  void dispose() {
+    _hp.dispose();
+    super.dispose();
+  }
+
+  Future<void> _simpan() async {
+    if (!(_form.currentState?.validate() ?? false)) return;
+    setState(() => _busy = true);
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      await AuthService().ubahProfil(
+        uid: widget.user.uid,
+        nama: widget.user.nama,
+        nohp: _hp.text,
+      );
+      if (mounted) {
+        messenger.showSnackBar(
+          const SnackBar(content: Text('Nomor telepon berhasil diperbarui.')),
+        );
+        Navigator.pop(context);
+      }
+    } catch (e) {
+      if (mounted) {
+        messenger.showSnackBar(
+          SnackBar(content: Text(AuthService.pesanError(e))),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return _bungkus(
+      context,
+      Form(
+        key: _form,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Ubah Nomor Telepon',
+              style: TextStyle(fontWeight: FontWeight.w800, fontSize: 17),
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: _hp,
+              autofocus: true,
+              keyboardType: TextInputType.phone,
+              decoration: const InputDecoration(
+                labelText: 'Nomor Telepon',
+                hintText: '08xxxxxxxxxx',
+                border: OutlineInputBorder(),
+              ),
+              validator: (v) {
+                final s = (v ?? '').trim();
+                if (s.isEmpty) return null;
+                return RegExp(r'^08\d{8,12}$').hasMatch(s)
+                    ? null
+                    : 'Format nomor 08xxxxxxxxxx';
+              },
+            ),
+            const SizedBox(height: 20),
+            _busy
+                ? const Center(child: CircularProgressIndicator())
+                : GradientButton(label: 'Simpan Perubahan', onPressed: _simpan),
+          ],
+        ),
       ),
     );
   }
@@ -111,48 +222,33 @@ class _GantiPasswordSheetState extends State<_GantiPasswordSheet> {
   final _form = GlobalKey<FormState>();
   final _lama = TextEditingController();
   final _baru = TextEditingController();
-  final _ulang = TextEditingController();
-  bool _lihat = false;
-  bool _proses = false;
-  String? _error;
+  bool _busy = false;
 
   @override
   void dispose() {
     _lama.dispose();
     _baru.dispose();
-    _ulang.dispose();
     super.dispose();
   }
 
   Future<void> _simpan() async {
     if (!(_form.currentState?.validate() ?? false)) return;
+    setState(() => _busy = true);
     final messenger = ScaffoldMessenger.of(context);
-    final nav = Navigator.of(context);
-    setState(() {
-      _proses = true;
-      _error = null;
-    });
     try {
       await AuthService().gantiPassword(lama: _lama.text, baru: _baru.text);
-      messenger.showSnackBar(const SnackBar(content: Text('Password berhasil diganti.')));
-      nav.pop();
+      if (mounted) {
+        messenger.showSnackBar(const SnackBar(content: Text('Password berhasil diubah.')));
+        Navigator.pop(context);
+      }
     } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _proses = false;
-        _error = AuthService.salahKredensial(e) ? 'Password lama salah.' : AuthService.pesanError(e);
-      });
+      if (mounted) {
+        messenger.showSnackBar(SnackBar(content: Text(AuthService.pesanError(e))));
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
     }
   }
-
-  InputDecoration _dec(String label) => InputDecoration(
-        labelText: label,
-        border: const OutlineInputBorder(),
-        suffixIcon: IconButton(
-          icon: Icon(_lihat ? Icons.visibility_off : Icons.visibility),
-          onPressed: () => setState(() => _lihat = !_lihat),
-        ),
-      );
 
   @override
   Widget build(BuildContext context) {
@@ -160,39 +256,31 @@ class _GantiPasswordSheetState extends State<_GantiPasswordSheet> {
       context,
       Form(
         key: _form,
-        child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-          const Text('Ganti Password',
-              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 17)),
-          const SizedBox(height: 16),
-          TextFormField(
-            controller: _lama,
-            obscureText: !_lihat,
-            decoration: _dec('Password lama'),
-            validator: (v) => (v ?? '').isEmpty ? 'Isi password lama' : null,
-          ),
-          const SizedBox(height: 12),
-          TextFormField(
-            controller: _baru,
-            obscureText: !_lihat,
-            decoration: _dec('Password baru'),
-            validator: (v) => (v ?? '').length >= 6 ? null : 'Minimal 6 karakter',
-          ),
-          const SizedBox(height: 12),
-          TextFormField(
-            controller: _ulang,
-            obscureText: !_lihat,
-            decoration: _dec('Ulangi password baru'),
-            validator: (v) => v == _baru.text ? null : 'Password tidak sama',
-          ),
-          if (_error != null) ...[
-            const SizedBox(height: 10),
-            Text(_error!, style: const TextStyle(color: Color(0xFFC62828), fontSize: 13)),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Ganti Password', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 17)),
+            const SizedBox(height: 16),
+            TextFormField(
+              controller: _lama,
+              obscureText: true,
+              decoration: const InputDecoration(labelText: 'Password Lama', border: OutlineInputBorder()),
+              validator: (v) => (v ?? '').isEmpty ? 'Isi password lama' : null,
+            ),
+            const SizedBox(height: 12),
+            TextFormField(
+              controller: _baru,
+              obscureText: true,
+              decoration: const InputDecoration(labelText: 'Password Baru', border: OutlineInputBorder()),
+              validator: (v) => (v ?? '').length >= 6 ? null : 'Minimal 6 karakter',
+            ),
+            const SizedBox(height: 18),
+            _busy
+                ? const Center(child: CircularProgressIndicator())
+                : GradientButton(label: 'Ganti Password', onPressed: _simpan),
           ],
-          const SizedBox(height: 16),
-          _proses
-              ? const Center(child: CircularProgressIndicator())
-              : GradientButton(label: 'Simpan Password', onPressed: _simpan),
-        ]),
+        ),
       ),
     );
   }

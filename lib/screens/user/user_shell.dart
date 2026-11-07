@@ -37,7 +37,10 @@ class _UserShellState extends State<UserShell> {
           onMulaiSkrining: () => setState(() => _i = 1),
         ),
         UserAnak(svc: _svc),
-        AkunScreen(user: widget.user),
+        AkunScreen(
+          user: widget.user,
+          onBack: () => setState(() => _i = 0), // Kembali ke tab Home (Beranda User)
+        ),
       ]),
       bottomNavigationBar: BottomNav(
         index: _i,

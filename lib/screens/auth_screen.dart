@@ -103,11 +103,21 @@ class _AuthScreenState extends State<AuthScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.transparent,
       body: Container(
+        width: double.infinity,
+        height: double.infinity,
         decoration: bgGradient,
         child: SafeArea(
+          bottom: false,
           child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+            physics: const BouncingScrollPhysics(),
+            padding: EdgeInsets.fromLTRB(
+              24,
+              12,
+              24,
+              24 + MediaQuery.of(context).padding.bottom,
+            ),
             child: Align(
               alignment: Alignment.topCenter,
               child: ConstrainedBox(
@@ -134,7 +144,7 @@ class _AuthScreenState extends State<AuthScreen> {
                             ),
                           ),
                         ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 12),
                       Center(
                         child: Image.asset(
                           'assets/logo-bilicheck.png',
@@ -142,9 +152,9 @@ class _AuthScreenState extends State<AuthScreen> {
                           fit: BoxFit.contain,
                         ),
                       ),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 28),
                       _Segment(register: _register, onChanged: _setMode),
-                      const SizedBox(height: 18),
+                      const SizedBox(height: 22),
                       AnimatedSize(
                         duration: const Duration(milliseconds: 220),
                         curve: Curves.easeOutCubic,
@@ -267,7 +277,7 @@ class _AuthScreenState extends State<AuthScreen> {
                           ),
                         ),
                       ],
-                      const SizedBox(height: 18),
+                      const SizedBox(height: 20),
                       _GradientButton(
                         label: _register ? 'Daftar' : 'Masuk',
                         busy: _busy,

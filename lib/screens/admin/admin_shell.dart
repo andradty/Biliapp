@@ -35,7 +35,10 @@ class _AdminShellState extends State<AdminShell> {
         AdminHome(user: widget.user, svc: _svc, onTambah: _tambah),
         AdminPasien(svc: _svc, onTambah: _tambah),
         AdminAlat(svc: _svc),
-        AkunScreen(user: widget.user),
+        AkunScreen(
+          user: widget.user,
+          onBack: () => setState(() => _i = 0), // Kembali ke tab Home (Beranda Admin)
+        ),
       ]),
       bottomNavigationBar: BottomNav(
         index: _i,

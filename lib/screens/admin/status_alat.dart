@@ -10,7 +10,7 @@ import '../../theme.dart';
 import '../../widgets/common.dart';
 import 'mulai_pemeriksaan_screen.dart' show kBatasStaleDetik;
 
-/// Indikator koneksi alat di tab Alat. Menampilkan status MQTT & ESP32.
+/// Indikator koneksi alat di tab Alat. Menampilkan status ESP32.
 class StatusAlatBar extends StatefulWidget {
   final DataService svc;
   const StatusAlatBar({super.key, required this.svc});
@@ -128,25 +128,11 @@ class _StatusIsiState extends State<_StatusIsi> {
                   style: const TextStyle(fontWeight: FontWeight.w600))),
         ]),
         const SizedBox(height: 12),
-        // Kotak Koneksi ESP & MQTT seperti di desain
-        Row(
-          children: [
-            Expanded(
-              child: _BadgeKoneksi(
-                title: 'MQTT',
-                status: _hidup ? 'Connected' : 'Offline',
-                connected: _hidup,
-              ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: _BadgeKoneksi(
-                title: 'ESP32',
-                status: espStatus,
-                connected: espConnected,
-              ),
-            ),
-          ],
+        // Kotak Koneksi ESP32 saja (MQTT dihilangkan)
+        _BadgeKoneksi(
+          title: 'ESP32',
+          status: espStatus,
+          connected: espConnected,
         ),
         StreamBuilder<StatusAlat?>(
           stream: _status,
@@ -187,41 +173,41 @@ class _BadgeKoneksi extends StatelessWidget {
   Widget build(BuildContext context) {
     final statusColor = connected ? const Color(0xFF16A34A) : AppColors.muted;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
         color: const Color(0xFFF1F5F8),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Row(
             children: [
               Container(
-                width: 6,
-                height: 6,
+                width: 7,
+                height: 7,
                 decoration: BoxDecoration(
                   color: connected ? const Color(0xFF16A34A) : AppColors.muted,
                   shape: BoxShape.circle,
                 ),
               ),
-              const SizedBox(width: 6),
+              const SizedBox(width: 8),
               Text(
                 title,
                 style: const TextStyle(
-                  fontSize: 12,
+                  fontSize: 13,
                   fontWeight: FontWeight.w800,
                   color: Color(0xFF64748B),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 2),
           Text(
             status,
             style: TextStyle(
-              fontSize: 11.5,
+              fontSize: 12.5,
               fontWeight: FontWeight.w700,
               color: statusColor,
             ),
