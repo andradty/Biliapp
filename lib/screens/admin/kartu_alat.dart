@@ -71,7 +71,7 @@ class _KartuInfoAlatState extends State<KartuInfoAlat> {
           _baris(
             'Status',
             Row(children: [
-              Icon(Icons.circle, size: 10, color: aktif ? statusColor('normal') : AppColors.muted),
+              Icon(Icons.circle, size: 10, color: aktif ? AppColors.ok : AppColors.muted),
               const SizedBox(width: 6),
               _teks(d.status.isEmpty ? '-' : d.status),
             ]),

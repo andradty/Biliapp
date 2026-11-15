@@ -16,7 +16,6 @@ class Pemeriksaan {
   final DateTime waktu;
   final double hasil;
   final String satuan; // '%' | 'mg/dL'
-  final String status; // normal | waspada | kritis
   final String puskesmasId;
   final String? orangTuaId;
   final Map<String, dynamic> pengukuran; // adc, arus_ma, lux, konsentrasi, jaundice_persen
@@ -32,7 +31,6 @@ class Pemeriksaan {
     required this.userId,
     required this.waktu,
     required this.hasil,
-    required this.status,
     required this.puskesmasId,
     this.satuan = '%',
     this.orangTuaId,
@@ -57,7 +55,6 @@ class Pemeriksaan {
       hasil: ((m['hasil_bilirubin'] ?? 0) as num).toDouble(),
       // dokumen lama (mis. ses_001) belum punya `satuan`
       satuan: (m['satuan'] ?? '%') as String,
-      status: (m['status_hasil'] ?? '') as String,
       puskesmasId: (m['puskesmas_id'] ?? '') as String,
       orangTuaId: m['orang_tua_id'] as String?,
       pengukuran: Map<String, dynamic>.from((m['pengukuran'] ?? {}) as Map),
@@ -78,7 +75,6 @@ class Pemeriksaan {
     required String userId,
     required double hasil,
     required String satuan,
-    required String status,
     required Map<String, dynamic> pengukuran,
     DateTime? waktu,
   }) =>
@@ -93,7 +89,6 @@ class Pemeriksaan {
         'created_at': FieldValue.serverTimestamp(),
         'hasil_bilirubin': hasil,
         'satuan': satuan,
-        'status_hasil': status,
         'pengukuran': pengukuran,
         'notif_terkirim': false,
       };

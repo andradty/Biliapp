@@ -10,33 +10,6 @@ String fmtJam(DateTime d) =>
     '${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}';
 String fmtKadar(double v) => v.toStringAsFixed(1).replaceAll('.', ',');
 
-Color statusColor(String s) {
-  switch (s) {
-    case 'normal':
-      return const Color(0xFF16A34A);
-    case 'waspada':
-      return const Color(0xFFB45309);
-    case 'kritis':
-      return const Color(0xFFC62828);
-    default:
-      return AppColors.muted;
-  }
-}
-
-String statusLabel(String s) {
-  switch (s) {
-    case 'normal':
-      return 'Normal';
-    case 'waspada':
-      return 'Warning';
-    case 'kritis':
-      return 'Kritis';
-    case 'dibatalkan':
-      return 'Dibatalkan';
-    default:
-      return '-';
-  }
-}
 
 /// Header berlatar gradien teal dengan dekorasi lingkaran hijau elegan (sesuai Image 7 & 8)
 class GradientHeader extends StatelessWidget {
@@ -175,27 +148,21 @@ class SubHeader extends StatelessWidget {
       );
 }
 
-class StatusBadge extends StatelessWidget {
-  final String status;
-  const StatusBadge(this.status, {super.key});
+class BadgeDibatalkan extends StatelessWidget {
+  const BadgeDibatalkan({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final c = statusColor(status);
-    final isWarn = status == 'waspada';
-    final bg = isWarn ? const Color(0xFFFDEACC) : const Color(0xFFDCFCE7);
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 3.5),
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Text(
-        statusLabel(status),
-        style: TextStyle(color: c, fontSize: 11, fontWeight: FontWeight.w700),
-      ),
-    );
-  }
+  Widget build(BuildContext context) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 3.5),
+        decoration: BoxDecoration(
+          color: const Color(0xFFEEEEEE),
+          borderRadius: BorderRadius.circular(999),
+        ),
+        child: const Text(
+          'Dibatalkan',
+          style: TextStyle(color: AppColors.muted, fontSize: 11, fontWeight: FontWeight.w700),
+        ),
+      );
 }
 
 class BabyAvatar extends StatelessWidget {
@@ -402,8 +369,7 @@ class PemeriksaanTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final c = statusColor(p.status);
-    final isWarn = p.status == 'waspada';
+    final c = p.dibatalkan ? AppColors.muted : AppColors.teal;
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       child: ClipRRect(
@@ -425,7 +391,7 @@ class PemeriksaanTile extends StatelessWidget {
                     Container(
                       width: 9,
                       decoration: BoxDecoration(
-                        color: isWarn ? const Color(0xFFDE9418) : const Color(0xFF6FA382),
+                        color: p.dibatalkan ? AppColors.muted : AppColors.teal2,
                       ),
                     ),
                     Expanded(
@@ -471,8 +437,10 @@ class PemeriksaanTile extends StatelessWidget {
                                       ),
                                     ],
                                   ),
-                                  const SizedBox(height: 5),
-                                  StatusBadge(p.status),
+                                  if (p.dibatalkan) ...[
+                                    const SizedBox(height: 5),
+                                    const BadgeDibatalkan(),
+                                  ],
                                 ],
                               ),
                             ),

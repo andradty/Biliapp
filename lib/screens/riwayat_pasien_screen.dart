@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../models/pasien.dart';
 import '../models/pemeriksaan.dart';
 import '../services/data_service.dart';
+import '../services/pdf_service.dart';
 import '../theme.dart';
 import '../widgets/agenda_petugas.dart';
 import '../widgets/common.dart';
@@ -50,6 +51,15 @@ class RiwayatPasienScreen extends StatelessWidget {
                   TrenChart(data: list.where((e) => !e.dibatalkan).toList()),
                   if (svc != null && svc!.user.isPetugas)
                     AgendaPasienSection(svc: svc!, pasien: pasien),
+                  if (list.isNotEmpty)
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton.icon(
+                        onPressed: () => PdfService.unduhRiwayat(context, pasien, list),
+                        icon: const Icon(Icons.picture_as_pdf_outlined, size: 18),
+                        label: const Text('Ekspor riwayat (PDF)'),
+                      ),
+                    ),
                   const SectionLabel('RIWAYAT PEMERIKSAAN'),
                   if (list.isEmpty)
                     const Padding(
@@ -66,7 +76,8 @@ class RiwayatPasienScreen extends StatelessWidget {
                       onTap: () => Navigator.push(
                         context,
                         MaterialPageRoute(
-                            builder: (_) => HasilScreen(p: e, namaPasien: pasien.nama, svc: svc)),
+                            builder: (_) => HasilScreen(
+                                p: e, namaPasien: pasien.nama, svc: svc, pasien: pasien)),
                       ),
                     ),
                 ]);

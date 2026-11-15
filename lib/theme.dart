@@ -11,6 +11,9 @@ class AppColors {
   static const ink = Color(0xFF16324A);
   static const muted = Color(0xFF5B6B7A);
 
+  /// Hijau netral untuk indikator 'aktif/tertaut' (bukan status hasil).
+  static const ok = Color(0xFF16A34A);
+
   // Gradien background Figma: biru muda lembut ke krem hangat di bawah
   static const bg1 = Color(0xFFE8F5FA);
   static const bg2 = Color(0xFFFBEFD7);

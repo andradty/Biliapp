@@ -5,7 +5,7 @@ import '../theme.dart';
 import 'common.dart';
 
 /// Grafik garis hasil pemeriksaan selama [hari] hari terakhir (digambar sendiri,
-/// tanpa paket tambahan). Titik diberi warna sesuai status hasil.
+/// tanpa paket tambahan). 
 class TrenChart extends StatelessWidget {
   final List<Pemeriksaan> data;
   final int hari;
@@ -109,7 +109,7 @@ class _TrenPainter extends CustomPainter {
     for (final e in pts) {
       final o = titik(e);
       canvas.drawCircle(o, 5.5, Paint()..color = Colors.white);
-      canvas.drawCircle(o, 4, Paint()..color = statusColor(e.status));
+      canvas.drawCircle(o, 4, Paint()..color = AppColors.teal);
     }
   }
 

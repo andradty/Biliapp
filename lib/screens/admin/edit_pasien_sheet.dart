@@ -237,7 +237,7 @@ class _EditPasienSheetState extends State<EditPasienSheet> {
         decoration:
         BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(14)),
         child: Row(children: [
-          Icon(Icons.link, color: statusColor('normal')),
+          Icon(Icons.link, color: AppColors.ok),
           const SizedBox(width: 10),
           Expanded(
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [

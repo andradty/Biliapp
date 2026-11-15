@@ -10,7 +10,10 @@ class AkunScreen extends StatelessWidget {
   final AppUser user;
   final VoidCallback? onBack;
 
-  const AkunScreen({super.key, required this.user, this.onBack});
+  /// Hanya dipakai Petugas: membuka layar Ekspor CSV.
+  final VoidCallback? onEksporData;
+
+  const AkunScreen({super.key, required this.user, this.onBack, this.onEksporData});
 
   @override
   Widget build(BuildContext context) {
@@ -115,6 +118,27 @@ class AkunScreen extends StatelessWidget {
               value: '****************',
               onTap: () => bukaGantiPassword(context),
             ),
+            if (user.isPetugas && onEksporData != null) ...[
+              const SizedBox(height: 18),
+              const Text(
+                'Data',
+                style: TextStyle(
+                  color: Color(0xFF7B8794),
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 6),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const Icon(Icons.table_chart_outlined, color: Color(0xFF0D748E)),
+                title: const Text('Ekspor data (CSV)',
+                    style: TextStyle(fontWeight: FontWeight.w800, color: Color(0xFF0D748E))),
+                subtitle: const Text('Mingguan, bulanan, atau rentang custom'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: onEksporData,
+              ),
+            ],
             const SizedBox(height: 28),
             SizedBox(
               width: double.infinity,

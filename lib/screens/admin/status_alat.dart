@@ -102,11 +102,11 @@ class _StatusIsiState extends State<_StatusIsi> {
     final bool espConnected = _hidup;
 
     if (_hidup) {
-      warna = statusColor('normal');
+      warna = AppColors.ok;
       teks = 'Alat terhubung';
       espStatus = 'Connected';
     } else if (_segar != null) {
-      warna = statusColor('kritis');
+      warna = const Color(0xFFC62828);
       teks = 'Alat tidak mengirim data';
       espStatus = 'Disconnected';
     } else {

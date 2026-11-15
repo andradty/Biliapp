@@ -2,7 +2,9 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
+import '../models/pasien.dart';
 import '../models/pemeriksaan.dart';
+import '../services/pdf_service.dart';
 import '../services/data_service.dart';
 import '../theme.dart';
 import '../widgets/common.dart';
@@ -14,7 +16,14 @@ class HasilScreen extends StatelessWidget {
 
   /// Diisi khusus untuk Petugas; tanpa ini tombol Batalkan tidak muncul.
   final DataService? svc;
-  const HasilScreen({super.key, required this.p, required this.namaPasien, this.svc});
+
+  /// Opsional; bila ada, PDF memuat data lengkap pasien.
+  final Pasien? pasien;
+  const HasilScreen(
+      {super.key, required this.p, required this.namaPasien, this.svc, this.pasien});
+
+  Future<void> _unduhPdf(BuildContext context) =>
+      PdfService.unduhHasil(context, p, namaPasien, pasien: pasien);
 
   bool get _bisaBatal => svc != null && svc!.user.isPetugas && !p.dibatalkan && !p.pending;
 
@@ -35,7 +44,7 @@ class HasilScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final c = p.dibatalkan ? AppColors.muted : statusColor(p.status);
+    final c = p.dibatalkan ? AppColors.muted : AppColors.teal;
     return Scaffold(
       body: Container(
         decoration: bgGradient,
@@ -67,7 +76,7 @@ class HasilScreen extends StatelessWidget {
                         Text(p.satuan,
                             style: const TextStyle(fontSize: 12, color: AppColors.muted)),
                         const SizedBox(height: 6),
-                        StatusBadge(p.dibatalkan ? 'dibatalkan' : p.status),
+                        if (p.dibatalkan) const BadgeDibatalkan(),
                       ]),
                     ]),
                   ),
@@ -83,8 +92,15 @@ class HasilScreen extends StatelessWidget {
               if (p.dibatalkan)
                 _BannerBatal(alasan: p.alasanBatal)
               else
-                EdukasiCard(status: p.status),
+                const EdukasiCard(),
               const SizedBox(height: 24),
+              OutlinedButton.icon(
+                onPressed: () => _unduhPdf(context),
+                icon: const Icon(Icons.picture_as_pdf_outlined, size: 18),
+                label: const Text('Unduh PDF'),
+                style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14)),
+              ),
+              const SizedBox(height: 12),
               GradientButton(label: 'Selesai', onPressed: () => Navigator.maybePop(context)),
               if (_bisaBatal) ...[
                 const SizedBox(height: 12),

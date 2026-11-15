@@ -1,5 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_database/firebase_database.dart';
+import 'package:firebase_database/firebase_database.dart' hide Query;
 
 import '../models/agenda.dart';
 import '../models/bacaan_alat.dart';
@@ -297,7 +297,6 @@ class DataService {
     required DeviceInfo device,
     required double hasil,
     required String satuan,
-    required String status,
     Map<String, dynamic> pengukuran = const {},
     String? sesiId,
   }) {
@@ -313,7 +312,6 @@ class DataService {
       userId: user.uid,
       hasil: hasil,
       satuan: satuan,
-      status: status,
       pengukuran: pengukuran,
     ));
   }
@@ -373,6 +371,20 @@ class DataService {
 
   Future<void> batalkanAgenda(String id) =>
       _db.collection('agenda').doc(id).update({'status': 'dibatalkan'});
+
+  /// Ekspor: pemeriksaan Puskesmas pada [awal, akhir) (akhir eksklusif).
+  /// Memakai index puskesmas_id + waktu desc (dan + pasien_id bila difilter).
+  Future<List<Pemeriksaan>> pemeriksaanRentang(DateTime awal, DateTime akhir,
+      {String? pasienId}) async {
+    Query<Map<String, dynamic>> q =
+        _db.collection('pemeriksaan').where('puskesmas_id', isEqualTo: user.puskesmasId);
+    if (pasienId != null) q = q.where('pasien_id', isEqualTo: pasienId);
+    q = q
+        .where('waktu_pemeriksaan', isGreaterThanOrEqualTo: Timestamp.fromDate(awal))
+        .where('waktu_pemeriksaan', isLessThan: Timestamp.fromDate(akhir))
+        .orderBy('waktu_pemeriksaan', descending: true);
+    return _periksa(await q.get());
+  }
 
   // ---------- Orang Tua ----------
   Stream<List<Pasien>> anakSaya() => _db

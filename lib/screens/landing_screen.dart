@@ -200,7 +200,7 @@ class _LandingScreenState extends State<LandingScreen> {
 
                                 const _Heading('APA ITU BILIRUBIN?'),
                                 const _InfoCard(
-                                  emoji: '🩸',
+                                  icon: Icons.bloodtype_outlined,
                                   title: 'Pigmen kuning dalam darah',
                                   body:
                                       'Bilirubin terbentuk saat sel darah merah rusak dan diolah oleh hati.',
@@ -700,7 +700,7 @@ class _FooterSection extends StatelessWidget {
                     ),
                   ),
                   InkWell(
-                    onTap: () => _salin(context, 'Instagram', kInstagramTim),
+                    onTap: () => bukaInstagram(context),
                     borderRadius: BorderRadius.circular(6),
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),

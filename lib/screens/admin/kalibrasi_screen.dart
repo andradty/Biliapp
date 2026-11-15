@@ -113,7 +113,7 @@ class _DaftarKalibrasiState extends State<_DaftarKalibrasi> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: aktif ? Border.all(color: statusColor('normal'), width: 1.5) : null,
+        border: aktif ? Border.all(color: AppColors.ok, width: 1.5) : null,
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(children: [
@@ -124,11 +124,11 @@ class _DaftarKalibrasiState extends State<_DaftarKalibrasi> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
-                  color: statusColor('normal').withValues(alpha: 0.15),
+                  color: AppColors.ok.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(999)),
               child: Text('Aktif',
                   style: TextStyle(
-                      color: statusColor('normal'), fontSize: 12, fontWeight: FontWeight.w700)),
+                      color: AppColors.ok, fontSize: 12, fontWeight: FontWeight.w700)),
             ),
         ]),
         const SizedBox(height: 6),

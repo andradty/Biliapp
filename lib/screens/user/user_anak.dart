@@ -59,10 +59,9 @@ class UserAnak extends StatelessWidget {
                       ? 0.0
                       : semuaPemeriksaan.map((e) => e.hasil).reduce((a, b) => a + b) /
                           totalPemeriksaan;
-                  final statusTerakhir = totalPemeriksaan == 0
-                      ? 'normal'
-                      : semuaPemeriksaan.first.status;
-                  final labelStatus = statusLabel(statusTerakhir);
+                  final labelTerakhir = totalPemeriksaan == 0
+                      ? '-'
+                      : '${fmtKadar(semuaPemeriksaan.first.hasil)}%';
 
                   return ListView(
                     padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
@@ -152,7 +151,7 @@ class UserAnak extends StatelessWidget {
                       ),
                       const SizedBox(height: 14),
 
-                      // 2. Tiga Kotak Statistik: Total | Rata-rata | Status Akhir (Image 13)
+                      // 2. Tiga Kotak Statistik: Total | Rata-rata | Hasil Terakhir (Image 13)
                       Container(
                         width: double.infinity,
                         padding: const EdgeInsets.all(14),
@@ -185,10 +184,10 @@ class UserAnak extends StatelessWidget {
                             const SizedBox(width: 8),
                             Expanded(
                               child: _StatMiniBox(
-                                topText: labelStatus,
-                                topColor: const Color(0xFF15803D),
-                                bottomText: 'Status akhir',
-                                bgColor: const Color(0xFFDDF3E4),
+                                topText: labelTerakhir,
+                                topColor: AppColors.teal,
+                                bottomText: 'Hasil terakhir',
+                                bgColor: const Color(0xFFE0F2F7),
                               ),
                             ),
                           ],
@@ -249,8 +248,6 @@ class UserAnak extends StatelessWidget {
                                           color: Color(0xFF16A34A),
                                         ),
                                       ),
-                                      SizedBox(width: 10),
-                                      StatusBadge('normal'),
                                     ],
                                   ),
                                 ],

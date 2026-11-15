@@ -7,6 +7,7 @@ import '../akun_screen.dart';
 import 'admin_alat.dart';
 import 'admin_home.dart';
 import 'admin_pasien.dart';
+import 'ekspor_csv_screen.dart';
 import 'tambah_pasien_sheet.dart';
 
 class AdminShell extends StatefulWidget {
@@ -38,6 +39,10 @@ class _AdminShellState extends State<AdminShell> {
         AkunScreen(
           user: widget.user,
           onBack: () => setState(() => _i = 0), // Kembali ke tab Home (Beranda Admin)
+          onEksporData: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => EksporCsvScreen(svc: _svc)),
+          ),
         ),
       ]),
       bottomNavigationBar: BottomNav(

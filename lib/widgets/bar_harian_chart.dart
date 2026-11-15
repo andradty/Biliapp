@@ -5,7 +5,7 @@ import '../theme.dart';
 import 'common.dart';
 
 /// Diagram batang: jumlah pemeriksaan per hari selama [hari] hari terakhir,
-/// ditumpuk per status (normal / waspada / kritis).
+/// satu warna.
 class BarHarianChart extends StatelessWidget {
   final List<Pemeriksaan> data;
   final int hari;
@@ -15,16 +15,14 @@ class BarHarianChart extends StatelessWidget {
   Widget build(BuildContext context) {
     final n = DateTime.now();
     final hariIni = DateTime(n.year, n.month, n.day);
-    // tiap elemen: [normal, waspada, kritis]
-    final kolom = List.generate(hari, (_) => [0, 0, 0]);
+    final kolom = List.filled(hari, 0);
     for (final e in data) {
       final d = DateTime(e.waktu.year, e.waktu.month, e.waktu.day);
       final idx = hari - 1 - hariIni.difference(d).inDays;
       if (idx < 0 || idx >= hari) continue;
-      final j = e.status == 'normal' ? 0 : (e.status == 'waspada' ? 1 : (e.status == 'kritis' ? 2 : -1));
-      if (j >= 0) kolom[idx][j]++;
+      kolom[idx]++;
     }
-    final adaData = kolom.any((k) => k[0] + k[1] + k[2] > 0);
+    final adaData = kolom.any((k) => k > 0);
 
     return Container(
       width: double.infinity,
@@ -62,7 +60,7 @@ class BarHarianChart extends StatelessWidget {
 }
 
 class _BarPainter extends CustomPainter {
-  final List<List<int>> kolom;
+  final List<int> kolom;
   _BarPainter(this.kolom);
 
   void _teks(Canvas canvas, String t, Offset pos) {
@@ -79,8 +77,7 @@ class _BarPainter extends CustomPainter {
     final area = Rect.fromLTRB(padKiri, 6, size.width, size.height - 2);
     var maks = 1;
     for (final k in kolom) {
-      final t = k[0] + k[1] + k[2];
-      if (t > maks) maks = t;
+      if (k > maks) maks = k;
     }
 
     final grid = Paint()
@@ -91,20 +88,16 @@ class _BarPainter extends CustomPainter {
     _teks(canvas, '0', Offset(area.left - 6, area.bottom));
     _teks(canvas, '$maks', Offset(area.left - 6, area.top));
 
-    final warna = [statusColor('normal'), statusColor('waspada'), statusColor('kritis')];
     final lebarSlot = area.width / kolom.length;
     final lebarBar = lebarSlot * 0.65;
     final satuanTinggi = area.height / maks;
 
     for (var i = 0; i < kolom.length; i++) {
       final x = area.left + lebarSlot * i + (lebarSlot - lebarBar) / 2;
-      var y = area.bottom;
-      for (var j = 0; j < 3; j++) {
-        final h = kolom[i][j] * satuanTinggi;
-        if (h <= 0) continue;
-        canvas.drawRect(Rect.fromLTWH(x, y - h, lebarBar, h), Paint()..color = warna[j]);
-        y -= h;
-      }
+      final h = kolom[i] * satuanTinggi;
+      if (h <= 0) continue;
+      canvas.drawRect(
+          Rect.fromLTWH(x, area.bottom - h, lebarBar, h), Paint()..color = AppColors.teal2);
     }
   }
 

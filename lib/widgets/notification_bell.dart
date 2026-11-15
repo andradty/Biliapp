@@ -22,7 +22,7 @@ String _waktuRelatif(DateTime t) {
 
 /// Bell notifikasi dengan dropdown. Selalu bisa diklik; kalau kosong
 /// menampilkan "Belum ada notifikasi".
-///  - Petugas   : pemeriksaan berstatus waspada/kritis (perlu tindak lanjut)
+///  - Petugas   : pemeriksaan terbaru di Puskesmas
 ///  - Orang Tua : hasil pemeriksaan terbaru anaknya
 class NotificationBell extends StatefulWidget {
   final AppUser user;
@@ -63,7 +63,7 @@ class _NotificationBellState extends State<NotificationBell> {
           var items = es.data ?? <Pemeriksaan>[];
           if (widget.user.isPetugas) {
             items = items
-                .where((e) => !e.dibatalkan && (e.status == 'waspada' || e.status == 'kritis'))
+                .where((e) => !e.dibatalkan)
                 .toList();
           }
           items = items.take(10).toList();
@@ -97,7 +97,7 @@ class _NotificationBellState extends State<NotificationBell> {
                 enabled: false,
                 height: 44,
                 child: Text(
-                  widget.user.isPetugas ? 'Perlu Tindak Lanjut' : 'Notifikasi',
+                  widget.user.isPetugas ? 'Pemeriksaan Terbaru' : 'Notifikasi',
                   style: const TextStyle(
                       fontWeight: FontWeight.w700, color: AppColors.ink),
                 ),
@@ -127,14 +127,14 @@ class _NotificationBellState extends State<NotificationBell> {
                           radius: 4,
                           backgroundColor: _notifDibaca.contains(e.id)
                               ? Colors.transparent
-                              : (e.dibatalkan ? AppColors.muted : statusColor(e.status)),
+                              : (e.dibatalkan ? AppColors.muted : AppColors.teal),
                         ),
                       ),
                       Expanded(
                         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                           Text(
                             widget.user.isPetugas
-                                ? '${nama[e.pasienId] ?? 'Pasien'} perlu tindak lanjut'
+                                ? 'Pemeriksaan ${nama[e.pasienId] ?? 'pasien'}'
                                 : e.dibatalkan
                                     ? 'Hasil ${nama[e.pasienId] ?? 'anak'} dibatalkan'
                                     : 'Hasil skrining ${nama[e.pasienId] ?? 'anak'}',
@@ -150,10 +150,10 @@ class _NotificationBellState extends State<NotificationBell> {
                           Text(
                             e.dibatalkan
                                 ? 'Dikoreksi petugas, abaikan hasil sebelumnya'
-                                : '${fmtKadar(e.hasil)} ${e.satuan} • ${statusLabel(e.status)}',
+                                : '${fmtKadar(e.hasil)} ${e.satuan}',
                             style: TextStyle(
                                 fontSize: 12,
-                                color: e.dibatalkan ? AppColors.muted : statusColor(e.status)),
+                                color: e.dibatalkan ? AppColors.muted : AppColors.teal),
                           ),
                           Text(_waktuRelatif(e.waktu),
                               style: const TextStyle(fontSize: 11, color: AppColors.muted)),

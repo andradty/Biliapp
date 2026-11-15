@@ -8,8 +8,8 @@ import '../../widgets/bar_harian_chart.dart';
 import '../../widgets/common.dart';
 import '../riwayat_pasien_screen.dart';
 
-/// Ringkasan 30 hari: sebaran status dan pasien yang hasil terakhirnya
-/// belum normal (perlu tindak lanjut).
+/// Ringkasan 30 hari: jumlah pemeriksaan, jumlah pasien, rata-rata hasil (%),
+/// dan hasil terakhir beberapa pasien. Tanpa kategori status.
 class RingkasanAdmin extends StatelessWidget {
   final List<Pemeriksaan> data; // urut waktu menurun
   final Map<String, Pasien> pasien;
@@ -18,43 +18,38 @@ class RingkasanAdmin extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    int hitung(String s) => data.where((e) => e.status == s).length;
+    final sah = data.where((e) => !e.dibatalkan).toList();
 
     // Hasil TERAKHIR tiap pasien; data sudah urut menurun.
     final terakhir = <String, Pemeriksaan>{};
-    for (final e in data) {
+    for (final e in sah) {
       terakhir.putIfAbsent(e.pasienId, () => e);
     }
-    final tindakLanjut = terakhir.values
-        .where((e) => (e.status == 'waspada' || e.status == 'kritis') && pasien[e.pasienId] != null)
-        .toList()
-      ..sort((a, b) {
-        if (a.status != b.status) return a.status == 'kritis' ? -1 : 1;
-        return b.waktu.compareTo(a.waktu);
-      });
+    final rata = sah.isEmpty ? null : sah.map((e) => e.hasil).reduce((a, b) => a + b) / sah.length;
+    final terbaru = terakhir.values.where((e) => pasien[e.pasienId] != null).take(5).toList();
 
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       const SectionLabel('Ringkasan 30 Hari'),
       Row(children: [
-        _Kotak('Normal', hitung('normal'), statusColor('normal')),
+        _Kotak('Pemeriksaan', '${sah.length}'),
         const SizedBox(width: 10),
-        _Kotak('Warning', hitung('waspada'), statusColor('waspada')),
+        _Kotak('Pasien', '${terakhir.length}'),
         const SizedBox(width: 10),
-        _Kotak('Kritis', hitung('kritis'), statusColor('kritis')),
+        _Kotak('Rata-rata %', rata == null ? '-' : fmtKadar(rata)),
       ]),
       const SizedBox(height: 10),
-      BarHarianChart(data: data),
-      const SectionLabel('Perlu Tindak Lanjut'),
-      if (tindakLanjut.isEmpty)
+      BarHarianChart(data: sah),
+      const SectionLabel('Hasil Terakhir Pasien'),
+      if (terbaru.isEmpty)
         Container(
           width: double.infinity,
           padding: const EdgeInsets.all(16),
           decoration:
               BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
-          child: const Text('Tidak ada pasien dengan hasil terakhir Warning atau Kritis.',
+          child: const Text('Belum ada pemeriksaan dalam 30 hari terakhir.',
               style: TextStyle(color: AppColors.muted, fontSize: 13)),
         ),
-      for (final e in tindakLanjut.take(5))
+      for (final e in terbaru)
         Container(
           margin: const EdgeInsets.only(bottom: 8),
           decoration:
@@ -65,10 +60,10 @@ class RingkasanAdmin extends StatelessWidget {
               leading: const BabyAvatar(size: 38),
               title: Text(pasien[e.pasienId]!.nama,
                   style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
-              subtitle: Text(
-                  '${fmtTanggalPendek(e.waktu)} • ${fmtKadar(e.hasil)} ${e.satuan}',
-                  style: const TextStyle(fontSize: 12)),
-              trailing: StatusBadge(e.status),
+              subtitle: Text(fmtTanggalPendek(e.waktu), style: const TextStyle(fontSize: 12)),
+              trailing: Text('${fmtKadar(e.hasil)} ${e.satuan}',
+                  style: const TextStyle(
+                      fontWeight: FontWeight.w800, fontSize: 14, color: AppColors.teal)),
               onTap: () => Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -87,9 +82,8 @@ class RingkasanAdmin extends StatelessWidget {
 
 class _Kotak extends StatelessWidget {
   final String label;
-  final int jumlah;
-  final Color warna;
-  const _Kotak(this.label, this.jumlah, this.warna);
+  final String nilai;
+  const _Kotak(this.label, this.nilai);
 
   @override
   Widget build(BuildContext context) => Expanded(
@@ -98,10 +92,11 @@ class _Kotak extends StatelessWidget {
           decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: warna.withValues(alpha: 0.35))),
+              border: Border.all(color: AppColors.teal.withValues(alpha: 0.3))),
           child: Column(children: [
-            Text('$jumlah',
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.w800, color: warna)),
+            Text(nilai,
+                style: const TextStyle(
+                    fontSize: 22, fontWeight: FontWeight.w800, color: AppColors.teal)),
             const SizedBox(height: 2),
             Text(label, style: const TextStyle(fontSize: 12, color: AppColors.muted)),
           ]),

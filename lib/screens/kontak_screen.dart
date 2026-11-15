@@ -1,13 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../theme.dart';
 import '../widgets/common.dart';
 
 const String kEmailTim = 'agrion.official@gmail.com';
 const String kWhatsAppTim = '081387421753';
-const String kInstagramTim = '@BiliCheck';
+const String kInstagramTim = '@agrion.official';
+const String kInstagramUrl = 'https://www.instagram.com/agrion.official';
 const String kAlamatTim = 'Sekolah Vokasi IPB University, Bogor';
+
+/// Membuka profil Instagram tim di aplikasi Instagram / browser.
+Future<void> bukaInstagram(BuildContext context) async {
+  final m = ScaffoldMessenger.of(context);
+  try {
+    final ok = await launchUrl(Uri.parse(kInstagramUrl), mode: LaunchMode.externalApplication);
+    if (!ok) m.showSnackBar(const SnackBar(content: Text('Tidak dapat membuka Instagram.')));
+  } catch (_) {
+    m.showSnackBar(const SnackBar(content: Text('Tidak dapat membuka Instagram.')));
+  }
+}
 
 class KontakScreen extends StatelessWidget {
   const KontakScreen({super.key});
@@ -48,8 +61,12 @@ class KontakScreen extends StatelessWidget {
                       subtitle: Text(k.$3,
                           style: const TextStyle(
                               fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.ink)),
-                      trailing: const Icon(Icons.copy, size: 18),
+                      trailing: Icon(k.$2 == 'Instagram' ? Icons.open_in_new : Icons.copy, size: 18),
                       onTap: () async {
+                        if (k.$2 == 'Instagram') {
+                          bukaInstagram(context);
+                          return;
+                        }
                         final m = ScaffoldMessenger.of(context);
                         await Clipboard.setData(ClipboardData(text: k.$3));
                         m.showSnackBar(SnackBar(content: Text('${k.$2} disalin')));

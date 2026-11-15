@@ -33,19 +33,18 @@ class _UserHomeState extends State<UserHome> {
   late final Stream<List<Pemeriksaan>> _periksa = widget.svc.pemeriksaanAnak();
   late final Stream<List<Agenda>> _agenda = widget.svc.agendaAnak();
 
-  Widget _kartuStatusArham(List<Pasien> anak, List<Pemeriksaan> semua) {
+  Widget _kartuHasilTerakhir(List<Pasien> anak, List<Pemeriksaan> semua) {
     String nama = anak.isNotEmpty ? anak.first.nama : 'Arham';
     if (nama.toLowerCase().startsWith('bayi ')) {
       nama = nama.substring(5);
     }
-    String status = 'normal';
+    Pemeriksaan? terakhir;
     for (final e in semua) {
       if (!e.dibatalkan) {
-        status = e.status;
+        terakhir = e;
         break;
       }
     }
-    final isNormal = status == 'normal';
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
@@ -61,37 +60,19 @@ class _UserHomeState extends State<UserHome> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
-            'Status $nama',
+            'Hasil terakhir $nama',
             style: const TextStyle(
               fontSize: 15.5,
               fontWeight: FontWeight.w600,
               color: AppColors.ink,
             ),
           ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3.5),
-            decoration: BoxDecoration(
-              color: isNormal ? const Color(0xFFDCFCE7) : const Color(0xFFFDEACC),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.circle,
-                  size: 7,
-                  color: isNormal ? const Color(0xFF16A34A) : const Color(0xFFB45309),
-                ),
-                const SizedBox(width: 5),
-                Text(
-                  isNormal ? 'Sehat (Normal)' : 'Warning',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    color: isNormal ? const Color(0xFF16A34A) : const Color(0xFFB45309),
-                  ),
-                ),
-              ],
+          Text(
+            terakhir == null ? 'Belum ada' : '${fmtKadar(terakhir.hasil)} ${terakhir.satuan}',
+            style: TextStyle(
+              fontSize: 15.5,
+              fontWeight: FontWeight.w800,
+              color: terakhir == null ? AppColors.muted : AppColors.teal,
             ),
           ),
         ],
@@ -139,13 +120,9 @@ class _UserHomeState extends State<UserHome> {
                     textAlign: TextAlign.right,
                     style: TextStyle(fontSize: 12, color: AppColors.muted))
               else
-                Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
-                  StatusBadge(t.status),
-                  const SizedBox(height: 4),
-                  Text('${fmtKadar(t.hasil)} ${t.satuan}',
-                      style: TextStyle(
-                          fontSize: 12.5, fontWeight: FontWeight.w700, color: statusColor(t.status))),
-                ]),
+                Text('${fmtKadar(t.hasil)} ${t.satuan}',
+                    style: const TextStyle(
+                        fontSize: 14, fontWeight: FontWeight.w800, color: AppColors.teal)),
             ]),
           ),
         ),
@@ -307,7 +284,7 @@ class _UserHomeState extends State<UserHome> {
 
                   return ListView(padding: const EdgeInsets.fromLTRB(20, 20, 20, 90), children: [
                     // 1. Kartu Status Arham (persis Image 10)
-                    _kartuStatusArham(anak, semua),
+                    _kartuHasilTerakhir(anak, semua),
 
                     // 2. Tombol Besar Oranye Mulai Skrining (persis Image 10)
                     GestureDetector(
@@ -362,8 +339,8 @@ class _UserHomeState extends State<UserHome> {
                       GradientButton(label: 'Lihat Riwayat Anak', onPressed: widget.onLihatAnak),
                     ],
                     if (terbaru != null) ...[
-                      SectionLabel('Info untuk ${namaAnak[terbaru.pasienId]}'),
-                      EdukasiCard(status: terbaru.status),
+                      const SectionLabel('Memahami Bilirubin'),
+                      const EdukasiCard(),
                     ],
                   ]);
                 },

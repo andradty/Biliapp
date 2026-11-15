@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
-import '../../models/ambang.dart';
+import '../../models/batas_hasil.dart';
 import '../../models/bacaan_alat.dart';
 import '../../models/device.dart';
 import '../../models/pasien.dart';
@@ -209,7 +209,6 @@ class _MulaiPemeriksaanScreenState extends State<MulaiPemeriksaanScreen> {
           device: _device!,
           hasil: nilai,
           satuan: kSatuan,
-          status: AmbangStatus.dari(nilai),
           pengukuran: pengukuran,
           sesiId: sesiId,
         )
@@ -224,7 +223,7 @@ class _MulaiPemeriksaanScreenState extends State<MulaiPemeriksaanScreen> {
   Future<void> _simpanAlat({bool konfirmasi = true}) async {
     final r = _rekam;
     if (r == null || _menyimpan) return;
-    if (r.hasil < 0 || r.hasil > AmbangStatus.maks) {
+    if (r.hasil < 0 || r.hasil > BatasHasil.maks) {
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
           content: Text('Nilai dari alat di luar rentang 0 - 100 %. Ulangi pengukuran.')));
       _bukaSesi();
@@ -257,7 +256,7 @@ class _MulaiPemeriksaanScreenState extends State<MulaiPemeriksaanScreen> {
   String? _validasi(String? v) {
     final n = double.tryParse((v ?? '').trim().replaceAll(',', '.'));
     if (n == null) return 'Masukkan angka';
-    if (n < 0 || n > AmbangStatus.maks) return 'Rentang 0 - 100 $kSatuan';
+    if (n < 0 || n > BatasHasil.maks) return 'Rentang 0 - 100 $kSatuan';
     return null;
   }
 
@@ -378,7 +377,6 @@ class _MulaiPemeriksaanScreenState extends State<MulaiPemeriksaanScreen> {
                 fontWeight: FontWeight.w700,
                 color: tampil ? AppColors.ink : AppColors.muted),
           ),
-          if (tampil) StatusBadge(AmbangStatus.dari(b.hasil)),
         ]),
       ),
       const SizedBox(height: 16),
@@ -408,7 +406,6 @@ class _MulaiPemeriksaanScreenState extends State<MulaiPemeriksaanScreen> {
           Text('${fmtKadar(r.hasil)}%',
               style: const TextStyle(
                   fontSize: 52, fontWeight: FontWeight.w700, color: AppColors.ink)),
-          StatusBadge(AmbangStatus.dari(r.hasil)),
         ]),
       ),
       const SizedBox(height: 16),
@@ -440,8 +437,6 @@ class _MulaiPemeriksaanScreenState extends State<MulaiPemeriksaanScreen> {
       ];
     }
 
-    final n = _nilai;
-    final valid = n != null && n >= 0 && n <= AmbangStatus.maks;
     return [
       const SizedBox(height: 12),
       Container(
@@ -474,13 +469,6 @@ class _MulaiPemeriksaanScreenState extends State<MulaiPemeriksaanScreen> {
             ),
             validator: _validasi,
           ),
-          if (valid) ...[
-            const SizedBox(height: 12),
-            Row(children: [
-              const Text('Status: ', style: TextStyle(fontSize: 13, color: AppColors.muted)),
-              StatusBadge(AmbangStatus.dari(n)),
-            ]),
-          ],
         ]),
       ),
       const SizedBox(height: 18),

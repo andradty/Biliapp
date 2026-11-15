@@ -1,127 +1,108 @@
 import 'package:flutter/material.dart';
 
 import '../theme.dart';
-import 'common.dart';
 
-/// Teks edukasi per status hasil. Semua kalimat ada di satu tempat ini
-/// supaya mudah direvisi tenaga kesehatan / dosen mitra tanpa menyentuh UI.
-class EdukasiTeks {
-  final IconData ikon;
-  final String judul;
-  final String penjelasan;
-  final List<String> langkah;
-  const EdukasiTeks(this.ikon, this.judul, this.penjelasan, this.langkah);
-}
+/// Edukasi UMUM tentang bilirubin untuk orang awam. Tidak bergantung pada nilai
+/// hasil. Semua kalimat ada di file ini agar mudah direvisi tenaga kesehatan /
+/// dosen mitra tanpa menyentuh UI.
+const _apaItu =
+    'Bilirubin adalah zat berwarna kuning yang terbentuk ketika sel darah merah yang '
+    'sudah tua dipecah oleh tubuh. Hati mengolah bilirubin, lalu dibuang lewat tinja '
+    'dan air seni. Jika bilirubin menumpuk di tubuh, kulit dan putih mata tampak kuning. '
+    'Kondisi ini disebut jaundice atau bayi kuning.';
 
-const _normal = EdukasiTeks(
-  Icons.check_circle_rounded,
-  'Hasil dalam batas normal',
-  'Kadar kuning (bilirubin) bayi pada pemeriksaan ini masih dalam batas normal. '
-      'Namun kuning bisa muncul atau naik pada hari-hari berikutnya, jadi tetap perlu dipantau.',
-  [
-    'Susui bayi sesering mungkin, sekitar 8–12 kali sehari untuk bayi baru lahir.',
-    'Lihat warna kulit dan putih mata bayi di tempat yang terang setiap hari.',
-    'Pastikan bayi sering buang air kecil dan buang air besar.',
-    'Lakukan pemeriksaan ulang sesuai jadwal dari Puskesmas.',
-  ],
-);
+const _mengapaBayi =
+    'Hati bayi baru lahir belum bekerja sempurna, sehingga bilirubin lebih mudah menumpuk. '
+    'Kuning ringan cukup sering terjadi dan umumnya membaik dalam 1 sampai 2 minggu. '
+    'Namun kadar bilirubin yang terlalu tinggi dapat berbahaya bagi bayi, karena itu bayi '
+    'tetap perlu dipantau oleh tenaga kesehatan.';
 
-const _waspada = EdukasiTeks(
-  Icons.error_rounded,
-  'Hasil perlu perhatian',
-  'Kadar kuning bayi lebih tinggi dari yang diharapkan. Ini belum tentu berbahaya, '
-      'tetapi perlu dipantau dan diperiksa lebih lanjut oleh petugas kesehatan.',
-  [
-    'Datang ke Puskesmas hari ini atau besok untuk pemeriksaan lanjutan.',
-    'Tetap susui bayi sesering mungkin.',
-    'Jangan memberi air putih, madu, atau ramuan tambahan tanpa saran petugas kesehatan.',
-    'Perhatikan apakah kuning makin meluas, misalnya sampai perut, tangan, atau kaki.',
-    'Pantau popok: bayi harus tetap sering buang air kecil.',
-  ],
-);
+const _tentangAngka =
+    'Angka persen pada aplikasi adalah hasil pembacaan sensor alat BiliCheck sebagai '
+    'skrining awal. Angka ini bukan hasil laboratorium dalam mg/dL, dan aplikasi tidak '
+    'mengelompokkannya ke kategori tertentu. Penilaian dan tindak lanjut ditentukan oleh '
+    'tenaga kesehatan.';
 
-const _kritis = EdukasiTeks(
-  Icons.warning_rounded,
-  'Segera ke tenaga kesehatan',
-  'Kadar kuning bayi tergolong tinggi. Bayi perlu diperiksa dan mendapat penanganan '
-      'dari tenaga kesehatan secepatnya.',
-  [
-    'Bawa bayi ke Puskesmas atau rumah sakit hari ini juga.',
-    'Jangan menunggu kuning hilang sendiri.',
-    'Tetap susui bayi selama dalam perjalanan.',
-    'Jangan memberi obat atau ramuan sendiri.',
-  ],
-);
+const _dirumah = [
+  'Susui bayi sesering mungkin, sekitar 8 sampai 12 kali sehari untuk bayi baru lahir.',
+  'Lihat warna kulit dan putih mata bayi di tempat yang terang setiap hari.',
+  'Pastikan bayi sering buang air kecil dan buang air besar.',
+  'Ikuti jadwal pemeriksaan ulang dari Puskesmas.',
+  'Jangan memberi air putih, madu, atau ramuan tambahan tanpa saran tenaga kesehatan.',
+];
 
 const _tandaBahaya = [
+  'Kuning muncul pada 24 jam pertama setelah lahir',
+  'Kuning makin meluas sampai telapak tangan dan kaki',
+  'Kuning belum hilang setelah 2 minggu',
   'Bayi sangat mengantuk, lemas, atau sulit dibangunkan',
   'Bayi tidak mau menyusu atau sering muntah',
   'Demam, atau badan teraba sangat dingin',
   'Tangisan melengking, badan kaku atau melengkung, atau kejang',
-  'Kuning sampai telapak tangan dan kaki',
   'Tinja pucat seperti dempul, atau air seni berwarna pekat',
 ];
 
-EdukasiTeks? edukasiUntuk(String status) {
-  switch (status) {
-    case 'normal':
-      return _normal;
-    case 'waspada':
-      return _waspada;
-    case 'kritis':
-      return _kritis;
-    default:
-      return null;
-  }
-}
-
-/// Kartu penjelasan hasil dengan bahasa sederhana untuk orang awam.
+/// Kartu edukasi umum tentang bilirubin dengan bahasa sederhana.
 class EdukasiCard extends StatelessWidget {
-  final String status;
-  const EdukasiCard({super.key, required this.status});
+  const EdukasiCard({super.key});
 
-  @override
-  Widget build(BuildContext context) {
-    final t = edukasiUntuk(status);
-    if (t == null) return const SizedBox.shrink();
-    final c = statusColor(status);
-
-    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+  Widget _kartu({required IconData ikon, required String judul, required Widget isi}) =>
       Container(
         width: double.infinity,
+        margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: c.withValues(alpha: 0.35)),
+          border: Border.all(color: AppColors.teal.withValues(alpha: 0.25)),
         ),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Row(children: [
-            Icon(t.ikon, color: c, size: 28),
+            Icon(ikon, color: AppColors.teal, size: 26),
             const SizedBox(width: 10),
             Expanded(
-              child: Text(t.judul,
-                  style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: c)),
+              child: Text(judul,
+                  style: const TextStyle(
+                      fontSize: 16.5, fontWeight: FontWeight.w700, color: AppColors.teal)),
             ),
           ]),
           const SizedBox(height: 10),
-          Text(t.penjelasan, style: const TextStyle(fontSize: 14.5, height: 1.45)),
-          const SizedBox(height: 14),
-          const Text('Yang bisa dilakukan',
-              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700)),
-          const SizedBox(height: 8),
-          for (final s in t.langkah)
+          isi,
+        ]),
+      );
+
+  Widget _paragraf(String t) => Text(t, style: const TextStyle(fontSize: 14.5, height: 1.45));
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      _kartu(
+          ikon: Icons.science_outlined,
+          judul: 'Apa itu bilirubin?',
+          isi: _paragraf(_apaItu)),
+      _kartu(
+          ikon: Icons.child_care_rounded,
+          judul: 'Mengapa bayi sering tampak kuning?',
+          isi: _paragraf(_mengapaBayi)),
+      _kartu(
+          ikon: Icons.info_outline_rounded,
+          judul: 'Tentang angka pada aplikasi',
+          isi: _paragraf(_tentangAngka)),
+      _kartu(
+        ikon: Icons.favorite_border_rounded,
+        judul: 'Yang bisa dilakukan di rumah',
+        isi: Column(children: [
+          for (final s in _dirumah)
             Padding(
               padding: const EdgeInsets.only(bottom: 8),
               child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Icon(Icons.check_rounded, size: 20, color: c),
+                const Icon(Icons.check_rounded, size: 20, color: AppColors.teal),
                 const SizedBox(width: 8),
                 Expanded(child: Text(s, style: const TextStyle(fontSize: 14.5, height: 1.4))),
               ]),
             ),
         ]),
       ),
-      const SizedBox(height: 12),
       Container(
         width: double.infinity,
         padding: const EdgeInsets.all(16),
@@ -152,8 +133,8 @@ class EdukasiCard extends StatelessWidget {
       ),
       const SizedBox(height: 10),
       const Text(
-        'Hasil ini adalah skrining awal dan bukan diagnosis. Informasi di atas bersifat '
-        'edukasi dan tidak menggantikan pemeriksaan oleh tenaga kesehatan.',
+        'Informasi ini bersifat edukasi umum dan tidak menggantikan pemeriksaan atau '
+        'saran dari tenaga kesehatan.',
         style: TextStyle(fontSize: 12, color: AppColors.muted, height: 1.4),
       ),
     ]);

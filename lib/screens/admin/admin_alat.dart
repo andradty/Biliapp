@@ -19,6 +19,14 @@ class AdminAlat extends StatefulWidget {
 
 class _AdminAlatState extends State<AdminAlat> {
   String? _pasienId;
+  final _cariC = TextEditingController();
+  String _cari = '';
+
+  @override
+  void dispose() {
+    _cariC.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -47,20 +55,88 @@ class _AdminAlatState extends State<AdminAlat> {
               stream: widget.svc.pasienPuskesmas(),
               builder: (context, snap) {
                 final list = snap.data ?? <Pasien>[];
-                return DropdownButtonFormField<String>(
-                  initialValue: _pasienId,
-                  decoration: InputDecoration(
-                    labelText: 'Pilih pasien',
-                    filled: true,
-                    fillColor: Colors.white,
-                    border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+                final terpilih = list.where((p) => p.id == _pasienId).toList();
+
+                // Pasien sudah dipilih: tampilkan kartu + tombol ganti.
+                if (terpilih.isNotEmpty) {
+                  return Container(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 8, 8),
+                    decoration: BoxDecoration(
+                        color: Colors.white, borderRadius: BorderRadius.circular(16)),
+                    child: Row(children: [
+                      const Icon(Icons.child_care_rounded, color: AppColors.teal),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(terpilih.first.nama,
+                            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
+                      ),
+                      TextButton(
+                        onPressed: () => setState(() {
+                          _pasienId = null;
+                          _cari = '';
+                          _cariC.clear();
+                        }),
+                        child: const Text('Ganti'),
+                      ),
+                    ]),
+                  );
+                }
+
+                final q = _cari.trim().toLowerCase();
+                final hasil = q.isEmpty
+                    ? <Pasien>[]
+                    : list.where((p) => p.nama.toLowerCase().contains(q)).take(6).toList();
+
+                return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  TextField(
+                    controller: _cariC,
+                    onChanged: (v) => setState(() => _cari = v),
+                    textInputAction: TextInputAction.search,
+                    decoration: InputDecoration(
+                      hintText: 'Cari nama bayi',
+                      prefixIcon: const Icon(Icons.search),
+                      suffixIcon: _cari.isEmpty
+                          ? null
+                          : IconButton(
+                              icon: const Icon(Icons.close),
+                              onPressed: () => setState(() {
+                                _cari = '';
+                                _cariC.clear();
+                              }),
+                            ),
+                      filled: true,
+                      fillColor: Colors.white,
+                      border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+                    ),
                   ),
-                  items: [
-                    for (final p in list) DropdownMenuItem(value: p.id, child: Text(p.nama))
+                  if (q.isNotEmpty) ...[
+                    const SizedBox(height: 8),
+                    if (hasil.isEmpty)
+                      const Padding(
+                        padding: EdgeInsets.all(8),
+                        child: Text('Nama bayi tidak ditemukan.',
+                            style: TextStyle(color: AppColors.muted, fontSize: 13)),
+                      )
+                    else
+                      Container(
+                        decoration: BoxDecoration(
+                            color: Colors.white, borderRadius: BorderRadius.circular(16)),
+                        child: Column(children: [
+                          for (final p in hasil)
+                            ListTile(
+                              dense: true,
+                              leading: const Icon(Icons.child_care_rounded, color: AppColors.teal),
+                              title: Text(p.nama),
+                              onTap: () {
+                                FocusScope.of(context).unfocus();
+                                setState(() => _pasienId = p.id);
+                              },
+                            ),
+                        ]),
+                      ),
                   ],
-                  onChanged: (v) => setState(() => _pasienId = v),
-                );
+                ]);
               },
             ),
             const SizedBox(height: 18),
