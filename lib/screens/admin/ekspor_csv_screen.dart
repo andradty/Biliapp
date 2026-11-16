@@ -22,9 +22,35 @@ class _EksporCsvScreenState extends State<EksporCsvScreen> {
   int _geser = 0; // 0 = periode berjalan, -1 = sebelumnya, dst. (mingguan/bulanan)
   DateTimeRange? _custom;
   String? _pasienId;
+  String? _pasienNama;
   bool _sertakanBatal = false;
   String _pemisah = ';';
   bool _loading = false;
+
+  /// Segmen terpilih diberi warna (tanpa ikon centang).
+  ButtonStyle get _gayaSegmen => ButtonStyle(
+        backgroundColor: WidgetStateProperty.resolveWith(
+            (st) => st.contains(WidgetState.selected) ? AppColors.teal : Colors.white),
+        foregroundColor: WidgetStateProperty.resolveWith(
+            (st) => st.contains(WidgetState.selected) ? Colors.white : AppColors.ink),
+      );
+
+  Future<void> _pilihPasien() async {
+    final daftar = await widget.svc.pasienPuskesmas().first;
+    if (!mounted) return;
+    final p = await showModalBottomSheet<Pasien>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _PilihPasienSheet(daftar: daftar, terpilihId: _pasienId),
+    );
+    if (p != null && mounted) {
+      setState(() {
+        _pasienId = p.id;
+        _pasienNama = p.nama;
+      });
+    }
+  }
 
   /// akhir bersifat eksklusif.
   ({DateTime awal, DateTime akhir})? get _rentang {
@@ -110,6 +136,8 @@ class _EksporCsvScreenState extends State<EksporCsvScreen> {
                   ButtonSegment(value: _Mode.custom, label: Text('Custom')),
                 ],
                 selected: {_mode},
+                showSelectedIcon: false,
+                style: _gayaSegmen,
                 onSelectionChanged: (s) => setState(() {
                   _mode = s.first;
                   _geser = 0;
@@ -151,27 +179,42 @@ class _EksporCsvScreenState extends State<EksporCsvScreen> {
                       style: TextStyle(color: AppColors.muted, fontSize: 12)),
                 ),
               const SectionLabel('PASIEN'),
-              StreamBuilder<List<Pasien>>(
-                stream: widget.svc.pasienPuskesmas(),
-                builder: (context, snap) {
-                  final list = snap.data ?? <Pasien>[];
-                  return DropdownButtonFormField<String?>(
-                    initialValue: _pasienId,
-                    decoration: InputDecoration(
-                      filled: true,
-                      fillColor: Colors.white,
-                      border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
-                    ),
-                    items: [
-                      const DropdownMenuItem<String?>(value: null, child: Text('Semua pasien')),
-                      for (final p in list)
-                        DropdownMenuItem<String?>(value: p.id, child: Text(p.nama)),
-                    ],
-                    onChanged: (v) => setState(() => _pasienId = v),
-                  );
+              SegmentedButton<bool>(
+                segments: const [
+                  ButtonSegment(value: true, label: Text('Semua pasien')),
+                  ButtonSegment(value: false, label: Text('Pilih pasien')),
+                ],
+                selected: {_pasienId == null},
+                showSelectedIcon: false,
+                style: _gayaSegmen,
+                onSelectionChanged: (sel) {
+                  if (sel.first) {
+                    setState(() {
+                      _pasienId = null;
+                      _pasienNama = null;
+                    });
+                  } else {
+                    _pilihPasien();
+                  }
                 },
               ),
+              if (_pasienId != null) ...[
+                const SizedBox(height: 10),
+                Container(
+                  padding: const EdgeInsets.fromLTRB(16, 4, 4, 4),
+                  decoration:
+                      BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+                  child: Row(children: [
+                    const Icon(Icons.child_care_rounded, color: AppColors.teal),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(_pasienNama ?? '-',
+                          style: const TextStyle(fontWeight: FontWeight.w700)),
+                    ),
+                    TextButton(onPressed: _pilihPasien, child: const Text('Ganti')),
+                  ]),
+                ),
+              ],
               const SectionLabel('FORMAT'),
               SegmentedButton<String>(
                 segments: const [
@@ -179,6 +222,8 @@ class _EksporCsvScreenState extends State<EksporCsvScreen> {
                   ButtonSegment(value: ',', label: Text('Standar (,)')),
                 ],
                 selected: {_pemisah},
+                showSelectedIcon: false,
+                style: _gayaSegmen,
                 onSelectionChanged: (s) => setState(() => _pemisah = s.first),
               ),
               const SizedBox(height: 8),
@@ -195,6 +240,86 @@ class _EksporCsvScreenState extends State<EksporCsvScreen> {
                 onPressed: (_loading || _rentang == null) ? null : _ekspor,
               ),
             ]),
+          ),
+        ]),
+      ),
+    );
+  }
+}
+
+
+/// Modal pencarian pasien untuk ekspor per pasien.
+class _PilihPasienSheet extends StatefulWidget {
+  final List<Pasien> daftar;
+  final String? terpilihId;
+  const _PilihPasienSheet({required this.daftar, this.terpilihId});
+
+  @override
+  State<_PilihPasienSheet> createState() => _PilihPasienSheetState();
+}
+
+class _PilihPasienSheetState extends State<_PilihPasienSheet> {
+  String _q = '';
+
+  @override
+  Widget build(BuildContext context) {
+    final q = _q.trim().toLowerCase();
+    final hasil = widget.daftar.where((p) => q.isEmpty || p.nama.toLowerCase().contains(q)).toList();
+    final mq = MediaQuery.of(context);
+    return Padding(
+      padding: EdgeInsets.only(bottom: mq.viewInsets.bottom),
+      child: Container(
+        constraints: BoxConstraints(maxHeight: mq.size.height * 0.8),
+        decoration: const BoxDecoration(
+          color: Color(0xFFF4F8FA),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        padding: const EdgeInsets.fromLTRB(20, 14, 20, 16),
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          Container(
+            width: 40,
+            height: 4,
+            decoration:
+                BoxDecoration(color: const Color(0xFFCFD8DC), borderRadius: BorderRadius.circular(2)),
+          ),
+          const SizedBox(height: 14),
+          const Text('Pilih Pasien',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: AppColors.ink)),
+          const SizedBox(height: 12),
+          SearchField(hint: 'Cari nama bayi...', onChanged: (v) => setState(() => _q = v)),
+          const SizedBox(height: 10),
+          Flexible(
+            child: hasil.isEmpty
+                ? const Padding(
+                    padding: EdgeInsets.all(24),
+                    child: Text('Pasien tidak ditemukan.',
+                        style: TextStyle(color: AppColors.muted)),
+                  )
+                : ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: hasil.length,
+                    itemBuilder: (_, i) {
+                      final p = hasil[i];
+                      final sel = p.id == widget.terpilihId;
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 8),
+                        decoration: BoxDecoration(
+                            color: Colors.white, borderRadius: BorderRadius.circular(16)),
+                        child: Material(
+                          type: MaterialType.transparency,
+                          child: ListTile(
+                            leading: const BabyAvatar(size: 38),
+                            title: Text(p.nama,
+                                style: const TextStyle(fontWeight: FontWeight.w600)),
+                            trailing: sel
+                                ? const Icon(Icons.check_circle, color: AppColors.teal)
+                                : null,
+                            onTap: () => Navigator.pop(context, p),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
           ),
         ]),
       ),

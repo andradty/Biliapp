@@ -217,3 +217,71 @@ class _BadgeKoneksi extends StatelessWidget {
     );
   }
 }
+
+
+/// Heartbeat firmware dianggap hilang kalau `status/last_seen` tidak berubah
+/// selama ini (alat menulisnya tiap beberapa detik).
+const int kBatasHeartbeatDetik = 30;
+
+/// Status firmware yang BENAR-BENAR dibaca dari alat (bukan nilai statis):
+/// Aktif = heartbeat terus berubah, Mati = berhenti, Menunggu = belum ada kepastian.
+class BarisStatusFirmware extends StatefulWidget {
+  final DataService svc;
+  final String deviceId;
+  const BarisStatusFirmware({super.key, required this.svc, required this.deviceId});
+
+  @override
+  State<BarisStatusFirmware> createState() => _BarisStatusFirmwareState();
+}
+
+class _BarisStatusFirmwareState extends State<BarisStatusFirmware> {
+  StreamSubscription<StatusAlat?>? _sub;
+  Timer? _tick;
+  final DateTime _mulai = DateTime.now();
+  bool _adaEvent = false;
+  DateTime? _lastSeen;
+  DateTime? _segar; // kapan heartbeat terakhir terlihat berubah
+
+  @override
+  void initState() {
+    super.initState();
+    _sub = widget.svc.statusAlat(widget.deviceId).listen((s) {
+      if (!mounted) return;
+      final ls = s?.lastSeen;
+      setState(() {
+        // Event pertama = nilai lama di RTDB; hanya perubahan yang dihitung segar.
+        if (_adaEvent && ls != _lastSeen) _segar = DateTime.now();
+        _adaEvent = true;
+        _lastSeen = ls;
+      });
+    }, onError: (_) {});
+    _tick = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (mounted) setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    _sub?.cancel();
+    _tick?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final now = DateTime.now();
+    final segar = _segar != null && now.difference(_segar!).inSeconds <= kBatasHeartbeatDetik;
+    final menunggu =
+        !segar && _segar == null && now.difference(_mulai).inSeconds <= kBatasHeartbeatDetik;
+    final (warna, teks) = segar
+        ? (AppColors.ok, 'Aktif')
+        : menunggu
+            ? (AppColors.muted, 'Menunggu...')
+            : (const Color(0xFFC62828), 'Mati');
+    return Row(children: [
+      Icon(Icons.circle, size: 10, color: warna),
+      const SizedBox(width: 6),
+      Text(teks, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: warna)),
+    ]);
+  }
+}

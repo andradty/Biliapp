@@ -77,8 +77,6 @@ class _AdminHomeState extends State<AdminHome> {
                             (pasien[e.pasienId]?.nama.toLowerCase().contains(q) ?? false))
                         .toList();
                     return ListView(padding: const EdgeInsets.fromLTRB(20, 16, 20, 90), children: [
-                      SearchField(hint: 'Cari nama...', onChanged: (v) => setState(() => _q = v)),
-                      const SizedBox(height: 14),
                       Container(
                         padding: const EdgeInsets.all(18),
                         decoration: BoxDecoration(
@@ -106,6 +104,8 @@ class _AdminHomeState extends State<AdminHome> {
                             : const SizedBox.shrink(),
                       ),
                       const SectionLabel('Pemeriksaan Terakhir'),
+                      SearchField(hint: 'Cari nama...', onChanged: (v) => setState(() => _q = v)),
+                      const SizedBox(height: 12),
                       if (list.isEmpty)
                         const Padding(
                           padding: EdgeInsets.all(24),

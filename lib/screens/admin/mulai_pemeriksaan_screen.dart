@@ -174,7 +174,6 @@ class _MulaiPemeriksaanScreenState extends State<MulaiPemeriksaanScreen> {
     if (_pasien == null) return 'Pasien tidak ditemukan.';
     final d = _device;
     if (d == null) return 'Belum ada alat terdaftar untuk Puskesmas ini.';
-    if (d.status != 'aktif') return 'Alat berstatus "${d.status}", belum bisa dipakai.';
     if (d.kalibrasiAktifId == null) {
       return 'Alat belum punya kalibrasi aktif. Pilih kalibrasi di tab Alat.';
     }

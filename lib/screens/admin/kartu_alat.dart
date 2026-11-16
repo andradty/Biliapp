@@ -6,6 +6,7 @@ import '../../services/data_service.dart';
 import '../../theme.dart';
 import '../../widgets/common.dart';
 import 'kalibrasi_screen.dart';
+import 'status_alat.dart' show BarisStatusFirmware;
 
 /// Batas umur kalibrasi sebelum diberi peringatan. NILAI SEMENTARA:
 /// sesuaikan dengan kebijakan kalibrasi dari tim hardware/dosen mitra.
@@ -63,19 +64,11 @@ class _KartuInfoAlatState extends State<KartuInfoAlat> {
           ]);
         }
 
-        final aktif = d.status == 'aktif';
         return _kartu([
           const Text('Info Alat', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
           const SizedBox(height: 8),
           _baris('Kode alat', _teks(d.id)),
-          _baris(
-            'Status',
-            Row(children: [
-              Icon(Icons.circle, size: 10, color: aktif ? AppColors.ok : AppColors.muted),
-              const SizedBox(width: 6),
-              _teks(d.status.isEmpty ? '-' : d.status),
-            ]),
-          ),
+          _baris('Status firmware', BarisStatusFirmware(svc: widget.svc, deviceId: d.id)),
           _baris('Sensor utama', _teks(d.sensorUtama ?? '-')),
           const Divider(height: 22),
           const Text('Kalibrasi Aktif',

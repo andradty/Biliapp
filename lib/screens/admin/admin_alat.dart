@@ -8,7 +8,7 @@ import 'kartu_alat.dart';
 import 'mulai_pemeriksaan_screen.dart';
 import 'status_alat.dart';
 
-/// Tab Alat: status koneksi, info + kalibrasi alat, dan mulai pemeriksaan.
+/// Tab Alat: mulai pemeriksaan (paling atas), lalu status koneksi serta info + kalibrasi alat.
 class AdminAlat extends StatefulWidget {
   final DataService svc;
   const AdminAlat({super.key, required this.svc});
@@ -47,9 +47,6 @@ class _AdminAlatState extends State<AdminAlat> {
         ),
         Expanded(
           child: ListView(padding: const EdgeInsets.all(20), children: [
-            StatusAlatBar(svc: widget.svc),
-            const SizedBox(height: 12),
-            KartuInfoAlat(svc: widget.svc),
             const SectionLabel('Mulai Pemeriksaan'),
             StreamBuilder<List<Pasien>>(
               stream: widget.svc.pasienPuskesmas(),
@@ -152,6 +149,10 @@ class _AdminAlatState extends State<AdminAlat> {
                         ),
                       ),
             ),
+            const SectionLabel('Info Alat'),
+            StatusAlatBar(svc: widget.svc),
+            const SizedBox(height: 12),
+            KartuInfoAlat(svc: widget.svc),
           ]),
         ),
       ]),

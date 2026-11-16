@@ -15,6 +15,47 @@ class AkunScreen extends StatelessWidget {
 
   const AkunScreen({super.key, required this.user, this.onBack, this.onEksporData});
 
+  Widget _tombolKembali(BuildContext context) => Container(
+        width: 36,
+        height: 32,
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.22),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: IconButton(
+          padding: EdgeInsets.zero,
+          icon: const Icon(Icons.arrow_back, color: Colors.white, size: 20),
+          onPressed: () {
+            if (onBack != null) {
+              onBack!();
+            } else if (Navigator.canPop(context)) {
+              Navigator.pop(context);
+            }
+          },
+        ),
+      );
+
+  Widget _avatar(double ukuran, double border) => Container(
+        width: ukuran,
+        height: ukuran,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          border: Border.all(color: const Color(0xFF072B3A), width: border),
+        ),
+        child: Icon(Icons.person, size: ukuran * 0.71, color: const Color(0xFF072B3A)),
+      );
+
+  Widget _nama({int? maxLines}) => Text(
+        user.nama,
+        maxLines: maxLines,
+        overflow: maxLines == null ? null : TextOverflow.ellipsis,
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 19.5,
+          fontWeight: FontWeight.w800,
+        ),
+      );
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -23,50 +64,22 @@ class AkunScreen extends StatelessWidget {
         // Header berlatar gradien teal dengan dekorasi lingkaran hijau (persis Image 5 & Image 6)
         GradientHeader(
           showLeftCircle: true,
-          padding: EdgeInsets.fromLTRB(20, MediaQuery.of(context).padding.top + 8, 20, 22),
-          child: Column(children: [
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Container(
-                width: 36,
-                height: 32,
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.22),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: IconButton(
-                  padding: EdgeInsets.zero,
-                  icon: const Icon(Icons.arrow_back, color: Colors.white, size: 20),
-                  onPressed: () {
-                    if (onBack != null) {
-                      onBack!();
-                    } else if (Navigator.canPop(context)) {
-                      Navigator.pop(context);
-                    }
-                  },
-                ),
-              ),
-            ),
-            const SizedBox(height: 2),
-            Container(
-              width: 76,
-              height: 76,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(color: const Color(0xFF072B3A), width: 4),
-              ),
-              child: const Icon(Icons.person, size: 54, color: Color(0xFF072B3A)),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              user.nama,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 19.5,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-          ]),
+          child: MediaQuery.orientationOf(context) == Orientation.landscape
+              // Landscape: satu baris ringkas supaya tinggi header konsisten.
+              ? Row(children: [
+                  _tombolKembali(context),
+                  const SizedBox(width: 14),
+                  _avatar(44, 3),
+                  const SizedBox(width: 12),
+                  Expanded(child: _nama(maxLines: 1)),
+                ])
+              : Column(children: [
+                  Align(alignment: Alignment.centerLeft, child: _tombolKembali(context)),
+                  const SizedBox(height: 2),
+                  _avatar(76, 4),
+                  const SizedBox(height: 12),
+                  _nama(),
+                ]),
         ),
         Expanded(
           child: ListView(padding: const EdgeInsets.fromLTRB(24, 22, 24, 32), children: [

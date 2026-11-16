@@ -28,7 +28,15 @@ class GradientHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final topPadding = MediaQuery.of(context).padding.top;
+    final mq = MediaQuery.of(context);
+    final topPadding = mq.padding.top;
+    // Landscape: padding dibuat ringkas & seragam supaya header tidak
+    // berubah-ubah ukurannya dan tidak menutupi layar.
+    final landscape = mq.orientation == Orientation.landscape;
+    final EdgeInsetsGeometry isiPadding = padding ??
+        (landscape
+            ? EdgeInsets.fromLTRB(20 + mq.padding.left, topPadding + 8, 20 + mq.padding.right, 12)
+            : EdgeInsets.fromLTRB(20, topPadding + 12, 20, 22));
     return ClipRRect(
       borderRadius: BorderRadius.vertical(bottom: Radius.circular(bottomRadius)),
       child: Container(
@@ -94,8 +102,7 @@ class GradientHeader extends StatelessWidget {
               ),
             ],
             Padding(
-              padding: padding ??
-                  EdgeInsets.fromLTRB(20, topPadding + 12, 20, 22),
+              padding: isiPadding,
               child: child,
             ),
           ],
@@ -350,7 +357,7 @@ class BottomNav extends StatelessWidget {
       );
 }
 
-/// Kartu pemeriksaan dengan garis aksen oranye/gradien di sisi kiri seperti Image 4 & 5
+/// Kartu pemeriksaan. Warna status hanya diberikan ke teks hasil (tanpa strip samping).
 class PemeriksaanTile extends StatelessWidget {
   final Pemeriksaan p;
   final String title;
@@ -388,12 +395,6 @@ class PemeriksaanTile extends StatelessWidget {
               child: IntrinsicHeight(
                 child: Row(
                   children: [
-                    Container(
-                      width: 9,
-                      decoration: BoxDecoration(
-                        color: p.dibatalkan ? AppColors.muted : AppColors.teal2,
-                      ),
-                    ),
                     Expanded(
                       child: Padding(
                         padding: const EdgeInsets.fromLTRB(14, 12, 16, 12),
