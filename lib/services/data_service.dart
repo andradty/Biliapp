@@ -175,15 +175,21 @@ class DataService {
       .onValue
       .map((e) => BacaanAlat.dari(e.snapshot.value));
 
-  /// Mencari akun Orang Tua lewat nomor HP (untuk menautkan ke pasien).
-  Future<String?> cariOrangTua(String nohp) async {
-    final q = await _db
-        .collection('users')
-        .where('role', isEqualTo: 'orang_tua')
-        .where('nohp', isEqualTo: nohp.trim())
-        .limit(1)
-        .get();
-    return q.docs.isEmpty ? null : q.docs.first.id;
+  /// Mencari akun Orang Tua lewat email (untuk menautkan ke pasien).
+  /// Email lama bisa tersimpan dengan huruf besar/kecil apa adanya, jadi dicoba
+  /// persis seperti diketik lalu versi huruf kecil.
+  Future<String?> cariOrangTua(String email) async {
+    final diketik = email.trim();
+    for (final kandidat in {diketik, diketik.toLowerCase()}) {
+      final q = await _db
+          .collection('users')
+          .where('role', isEqualTo: 'orang_tua')
+          .where('email', isEqualTo: kandidat)
+          .limit(1)
+          .get();
+      if (q.docs.isNotEmpty) return q.docs.first.id;
+    }
+    return null;
   }
 
   /// Tidak perlu di-await agar tetap jalan offline (tersimpan di cache lokal).
@@ -273,12 +279,12 @@ class DataService {
     return beda.length;
   }
 
-  /// Menautkan atau mengganti Orang Tua lewat no. HP. Null kalau no. HP belum terdaftar.
+  /// Menautkan atau mengganti Orang Tua lewat email. Null kalau email belum terdaftar.
   /// Butuh internet. Pasien di-update dulu (di-await): rules pemeriksaan/agenda membaca
   /// pasien.orang_tua_id lewat get(), yang melihat kondisi SEBELUM batch.
   Future<({String id, String nama, int diperbarui})?> tautkanOrangTua(
-      Pasien p, String nohp) async {
-    final ortuId = await cariOrangTua(nohp);
+      Pasien p, String email) async {
+    final ortuId = await cariOrangTua(email);
     if (ortuId == null) return null;
     final nama = await namaOrangTua(ortuId) ?? 'Orang Tua';
     await _db.collection('pasien').doc(p.id).update({'orang_tua_id': ortuId});

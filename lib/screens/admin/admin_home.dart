@@ -23,6 +23,14 @@ class AdminHome extends StatefulWidget {
 
 class _AdminHomeState extends State<AdminHome> {
   String _q = '';
+  int _hal = 0;
+  static const _perHal = 5;
+  // Stream di-cache supaya tidak berlangganan ulang tiap build (penyebab daftar
+  // berkedip, scroll lompat ke atas, dan kolom pencarian terhapus).
+  late final Stream<List<Pasien>> _pasienS = widget.svc.pasienPuskesmas();
+  late final Stream<List<Pemeriksaan>> _terakhirS = widget.svc.pemeriksaanTerakhir();
+  late final Stream<int> _hariIniS = widget.svc.jumlahHariIni();
+  late final Stream<DocumentSnapshot<Map<String, dynamic>>> _pkmS = widget.svc.puskesmas();
   late final Stream<List<Pemeriksaan>> _s30 = widget.svc.pemeriksaan30Hari();
   // Data lebih panjang (~6 bulan) khusus grafik per minggu/bulan.
   late final Stream<List<Pemeriksaan>> _sGrafik = widget.svc.pemeriksaan30Hari(hari: 190);
@@ -50,7 +58,7 @@ class _AdminHomeState extends State<AdminHome> {
                       style: const TextStyle(
                           color: Colors.white, fontSize: 18, fontWeight: FontWeight.w700)),
                   StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
-                    stream: widget.svc.puskesmas(),
+                    stream: _pkmS,
                     builder: (c, s) => Text(
                       (s.data?.data()?['nama'] ?? widget.user.puskesmasId ?? '') as String,
                       style: const TextStyle(color: Colors.white),
@@ -63,12 +71,12 @@ class _AdminHomeState extends State<AdminHome> {
           ),
           Expanded(
             child: StreamBuilder<List<Pasien>>(
-              stream: widget.svc.pasienPuskesmas(),
+              stream: _pasienS,
               builder: (context, ps) {
                 if (ps.hasError) return SingleChildScrollView(child: ErrorBox(ps.error!));
                 final pasien = {for (final p in ps.data ?? <Pasien>[]) p.id: p};
                 return StreamBuilder<List<Pemeriksaan>>(
-                  stream: widget.svc.pemeriksaanTerakhir(),
+                  stream: _terakhirS,
                   builder: (context, es) {
                     if (es.hasError) return SingleChildScrollView(child: ErrorBox(es.error!));
                     if (!es.hasData) return const Center(child: CircularProgressIndicator());
@@ -78,6 +86,9 @@ class _AdminHomeState extends State<AdminHome> {
                             q.isEmpty ||
                             (pasien[e.pasienId]?.nama.toLowerCase().contains(q) ?? false))
                         .toList();
+                    final total = (list.length / _perHal).ceil();
+                    final hal = total == 0 ? 0 : _hal.clamp(0, total - 1).toInt();
+                    final tampil = list.skip(hal * _perHal).take(_perHal).toList();
                     return ListView(padding: const EdgeInsets.fromLTRB(20, 16, 20, 90), children: [
                       Container(
                         padding: const EdgeInsets.all(18),
@@ -90,7 +101,7 @@ class _AdminHomeState extends State<AdminHome> {
                           const Icon(Icons.bar_chart, color: AppColors.orange1),
                           const SizedBox(width: 10),
                           StreamBuilder<int>(
-                            stream: widget.svc.jumlahHariIni(),
+                            stream: _hariIniS,
                             builder: (c, s) => Text('Hari ini: ${s.data ?? 0} Skrining',
                                 style: const TextStyle(
                                     color: Colors.white,
@@ -113,7 +124,10 @@ class _AdminHomeState extends State<AdminHome> {
                             : const SizedBox.shrink(),
                       ),
                       const SectionLabel('Pemeriksaan Terakhir'),
-                      SearchField(hint: 'Cari nama...', onChanged: (v) => setState(() => _q = v)),
+                      SearchField(hint: 'Cari nama...', onChanged: (v) => setState(() {
+                        _q = v;
+                        _hal = 0;
+                      })),
                       const SizedBox(height: 12),
                       if (list.isEmpty)
                         const Padding(
@@ -122,7 +136,7 @@ class _AdminHomeState extends State<AdminHome> {
                               textAlign: TextAlign.center,
                               style: TextStyle(color: AppColors.muted)),
                         ),
-                      for (final e in list)
+                      for (final e in tampil)
                         PemeriksaanTile(
                           p: e,
                           title: pasien[e.pasienId]?.nama ?? 'Pasien',
@@ -137,6 +151,8 @@ class _AdminHomeState extends State<AdminHome> {
                             ),
                           ),
                         ),
+                      PaginasiBar(
+                          halaman: hal, total: total, onUbah: (h) => setState(() => _hal = h)),
                     ]);
                   },
                 );

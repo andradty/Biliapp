@@ -23,7 +23,6 @@ class _EksporCsvScreenState extends State<EksporCsvScreen> {
   DateTimeRange? _custom;
   String? _pasienId;
   String? _pasienNama;
-  bool _modePilihPasien = false;
   bool _sertakanBatal = false;
   String _pemisah = ';';
   bool _loading = false;
@@ -97,10 +96,6 @@ class _EksporCsvScreenState extends State<EksporCsvScreen> {
     final r = _rentang;
     if (r == null) return;
     final messenger = ScaffoldMessenger.of(context);
-    if (_modePilihPasien && _pasienId == null) {
-      messenger.showSnackBar(const SnackBar(content: Text('Pilih pasien terlebih dahulu.')));
-      return;
-    }
     setState(() => _loading = true);
     try {
       final data = await widget.svc.pemeriksaanRentang(r.awal, r.akhir, pasienId: _pasienId);
@@ -185,42 +180,32 @@ class _EksporCsvScreenState extends State<EksporCsvScreen> {
                 ),
               const SectionLabel('PASIEN'),
               SegmentedButton<bool>(
-                segments: const [
-                  ButtonSegment(value: true, label: Text('Semua pasien')),
-                  ButtonSegment(value: false, label: Text('Pilih pasien')),
+                segments: [
+                  const ButtonSegment(value: true, label: Text('Semua pasien')),
+                  ButtonSegment(
+                    value: false,
+                    label: Text(_pasienNama ?? 'Pilih pasien',
+                        maxLines: 1, overflow: TextOverflow.ellipsis),
+                  ),
                 ],
-                selected: {!_modePilihPasien},
+                selected: {_pasienId == null},
+                emptySelectionAllowed: true,
                 showSelectedIcon: false,
                 style: _gayaSegmen,
                 onSelectionChanged: (sel) {
-                  setState(() {
-                    _modePilihPasien = !sel.first;
-                    if (sel.first) {
+                  if (sel.isEmpty) {
+                    // Menekan segmen "Pilih pasien" yang sudah aktif -> buka modal lagi.
+                    _pilihPasien();
+                  } else if (sel.first) {
+                    setState(() {
                       _pasienId = null;
                       _pasienNama = null;
-                    }
-                  });
-                  if (!sel.first && _pasienId == null) _pilihPasien();
+                    });
+                  } else {
+                    _pilihPasien();
+                  }
                 },
               ),
-              if (_modePilihPasien) ...[
-                const SizedBox(height: 12),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-                  decoration:
-                      BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
-                  child: Row(children: [
-                    Expanded(
-                      child: TextButton.icon(
-                        onPressed: _pilihPasien,
-                        icon: const Icon(Icons.search, size: 18),
-                        label: Text(_pasienNama ?? 'Cari & pilih pasien',
-                            maxLines: 1, overflow: TextOverflow.ellipsis),
-                      ),
-                    ),
-                  ]),
-                ),
-              ],
               const SectionLabel('FORMAT'),
               SegmentedButton<String>(
                 segments: const [

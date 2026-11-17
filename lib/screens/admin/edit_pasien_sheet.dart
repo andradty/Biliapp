@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../models/pasien.dart';
 import '../../services/data_service.dart';
 import '../../theme.dart';
 import '../../widgets/common.dart';
 
-/// Petugas: koreksi data pasien dan tautkan ke akun Orang Tua (lewat no. HP).
+/// Petugas: koreksi data pasien dan tautkan ke akun Orang Tua (lewat email).
 class EditPasienSheet extends StatefulWidget {
   final DataService svc;
   final Pasien pasien;
@@ -21,7 +22,7 @@ class _EditPasienSheetState extends State<EditPasienSheet> {
   late final _berat = TextEditingController(text: '${widget.pasien.beratLahir ?? ''}');
   late final _usia = TextEditingController(text: '${widget.pasien.usiaKehamilan ?? ''}');
   late final _alamat = TextEditingController(text: widget.pasien.alamat);
-  final _hp = TextEditingController();
+  final _emailOrtu = TextEditingController();
   late DateTime? _lahir = widget.pasien.tanggalLahir;
   late String _jk = widget.pasien.jenisKelamin == 'P' ? 'P' : 'L';
   String? _error;
@@ -40,7 +41,7 @@ class _EditPasienSheetState extends State<EditPasienSheet> {
 
   @override
   void dispose() {
-    for (final c in [_nama, _berat, _usia, _alamat, _hp]) {
+    for (final c in [_nama, _berat, _usia, _alamat, _emailOrtu]) {
       c.dispose();
     }
     super.dispose();
@@ -109,8 +110,8 @@ class _EditPasienSheetState extends State<EditPasienSheet> {
   }
 
   Future<void> _tautkan() async {
-    if (_hp.text.trim().isEmpty) {
-      setState(() => _errorTaut = 'Isi no. HP Orang Tua');
+    if (!_emailOrtu.text.contains('@')) {
+      setState(() => _errorTaut = 'Isi email Orang Tua yang valid');
       return;
     }
     final messenger = ScaffoldMessenger.of(context);
@@ -128,12 +129,12 @@ class _EditPasienSheetState extends State<EditPasienSheet> {
       _errorTaut = null;
     });
     try {
-      final r = await widget.svc.tautkanOrangTua(widget.pasien, _hp.text);
+      final r = await widget.svc.tautkanOrangTua(widget.pasien, _emailOrtu.text);
       if (!mounted) return;
       if (r == null) {
         setState(() {
           _menautkan = false;
-          _errorTaut = 'Orang Tua dengan no. HP itu belum terdaftar. '
+          _errorTaut = 'Orang Tua dengan email itu belum terdaftar. '
               'Minta mereka mendaftar di aplikasi dulu.';
         });
         return;
@@ -142,7 +143,7 @@ class _EditPasienSheetState extends State<EditPasienSheet> {
       setState(() {
         _menautkan = false;
         _ganti = false;
-        _hp.clear();
+        _emailOrtu.clear();
         _ortuId = r.id;
         _namaOrtu = r.nama;
       });
@@ -204,14 +205,27 @@ class _EditPasienSheetState extends State<EditPasienSheet> {
   );
 
   String? _wajib(String? v) => (v ?? '').trim().isEmpty ? 'Wajib diisi' : null;
-  String? _angka(String? v) => int.tryParse((v ?? '').trim()) == null ? 'Isi angka' : null;
+  String? _beratValid(String? v) {
+    final n = int.tryParse((v ?? '').trim());
+    if (n == null) return 'Isi angka';
+    if (n < 300 || n > 7000) return 'Berat harus 300-7000 gram';
+    return null;
+  }
+
+  String? _usiaValid(String? v) {
+    final n = int.tryParse((v ?? '').trim());
+    if (n == null) return 'Isi angka';
+    if (n < 20 || n > 45) return 'Usia harus 20-45 minggu';
+    return null;
+  }
 
   Widget _formTaut({required String label}) =>
       Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         TextFormField(
-          controller: _hp,
-          keyboardType: TextInputType.phone,
-          decoration: _dec('No. HP Orang Tua'),
+          controller: _emailOrtu,
+          keyboardType: TextInputType.emailAddress,
+          autocorrect: false,
+          decoration: _dec('Email Orang Tua'),
         ),
         if (_errorTaut != null)
           Padding(
@@ -259,7 +273,7 @@ class _EditPasienSheetState extends State<EditPasienSheet> {
               : () => setState(() {
             _ganti = false;
             _errorTaut = null;
-            _hp.clear();
+            _emailOrtu.clear();
           }),
           child: const Text('Batal'),
         ),
@@ -324,25 +338,25 @@ class _EditPasienSheetState extends State<EditPasienSheet> {
                 onSelectionChanged: (s) => setState(() => _jk = s.first),
               ),
               const SizedBox(height: 12),
-              Row(children: [
-                Expanded(
-                  child: TextFormField(
-                    controller: _berat,
-                    keyboardType: TextInputType.number,
-                    decoration: _dec('Berat lahir (gram)'),
-                    validator: _angka,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: TextFormField(
-                    controller: _usia,
-                    keyboardType: TextInputType.number,
-                    decoration: _dec('Usia kehamilan (minggu)'),
-                    validator: _angka,
-                  ),
-                ),
-              ]),
+              TextFormField(
+                controller: _berat,
+                keyboardType: TextInputType.number,
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                decoration: _dec('Berat lahir').copyWith(
+                    suffixText: 'gram',
+                    helperText: 'Dalam GRAM, bukan kg. Contoh: 3200'),
+                validator: _beratValid,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _usia,
+                keyboardType: TextInputType.number,
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                decoration: _dec('Usia kehamilan').copyWith(
+                    suffixText: 'minggu',
+                    helperText: 'Dalam MINGGU, bukan bulan. Contoh: 38'),
+                validator: _usiaValid,
+              ),
               const SizedBox(height: 12),
               TextFormField(controller: _alamat, decoration: _dec('Alamat'), validator: _wajib),
               if (_error != null)

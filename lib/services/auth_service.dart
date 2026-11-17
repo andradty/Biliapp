@@ -42,7 +42,7 @@ class AuthService {
     try {
       await _db.collection('users').doc(user.uid).set({
         'nama': nama.trim(),
-        'email': email.trim(),
+        'email': email.trim().toLowerCase(),
         'role': 'orang_tua',
         'puskesmas_id': null,
         'nohp': nohp.trim(),

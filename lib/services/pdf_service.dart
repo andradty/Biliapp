@@ -2,7 +2,7 @@ import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:flutter/material.dart' show AlertDialog, BuildContext, Color, Colors, Column, CrossAxisAlignment, EdgeInsets, FilledButton, FontWeight, Icon, Icons, MainAxisSize, ScaffoldMessenger, SelectableText, SizedBox, SnackBar, Text, TextAlign, TextButton, TextStyle, Navigator, showDialog;
+import 'package:flutter/material.dart' show AlertDialog, BuildContext, Color, Colors, Column, CrossAxisAlignment, FilledButton, FontWeight, Icon, Icons, MainAxisSize, ScaffoldMessenger, SelectableText, SizedBox, SnackBar, Text, TextAlign, TextButton, TextStyle, Navigator, showDialog;
 import 'package:open_filex/open_filex.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';

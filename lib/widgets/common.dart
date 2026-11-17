@@ -460,3 +460,40 @@ class PemeriksaanTile extends StatelessWidget {
     );
   }
 }
+
+
+/// Navigasi halaman ringkas: ‹ 1 / 4 ›. Tersembunyi kalau hanya 1 halaman.
+/// [halaman] dimulai dari 0.
+class PaginasiBar extends StatelessWidget {
+  final int halaman;
+  final int total;
+  final ValueChanged<int> onUbah;
+  const PaginasiBar({super.key, required this.halaman, required this.total, required this.onUbah});
+
+  Widget _panah(IconData ikon, VoidCallback? onTap) => InkResponse(
+        onTap: onTap,
+        radius: 20,
+        child: Padding(
+          padding: const EdgeInsets.all(6),
+          child: Icon(ikon,
+              size: 20, color: onTap == null ? const Color(0xFFB0BEC5) : AppColors.teal),
+        ),
+      );
+
+  @override
+  Widget build(BuildContext context) {
+    if (total <= 1) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(top: 2),
+      child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+        _panah(Icons.chevron_left, halaman > 0 ? () => onUbah(halaman - 1) : null),
+        const SizedBox(width: 8),
+        Text('${halaman + 1} / $total',
+            style: const TextStyle(
+                fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.muted)),
+        const SizedBox(width: 8),
+        _panah(Icons.chevron_right, halaman < total - 1 ? () => onUbah(halaman + 1) : null),
+      ]),
+    );
+  }
+}

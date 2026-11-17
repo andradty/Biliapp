@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../services/data_service.dart';
 import '../../theme.dart';
@@ -18,7 +19,7 @@ class _TambahPasienSheetState extends State<TambahPasienSheet> {
   final _berat = TextEditingController();
   final _usia = TextEditingController();
   final _alamat = TextEditingController();
-  final _hp = TextEditingController();
+  final _emailOrtu = TextEditingController();
   DateTime? _lahir;
   String _jk = 'L';
   bool _busy = false;
@@ -26,7 +27,7 @@ class _TambahPasienSheetState extends State<TambahPasienSheet> {
 
   @override
   void dispose() {
-    for (final c in [_nama, _berat, _usia, _alamat, _hp]) {
+    for (final c in [_nama, _berat, _usia, _alamat, _emailOrtu]) {
       c.dispose();
     }
     super.dispose();
@@ -57,12 +58,19 @@ class _TambahPasienSheetState extends State<TambahPasienSheet> {
     final nav = Navigator.of(context);
     try {
       String? ortuId;
-      if (_hp.text.trim().isNotEmpty) {
-        ortuId = await widget.svc.cariOrangTua(_hp.text);
+      if (_emailOrtu.text.trim().isNotEmpty) {
+        if (!_emailOrtu.text.contains('@')) {
+          setState(() {
+            _busy = false;
+            _error = 'Format email Orang Tua tidak valid.';
+          });
+          return;
+        }
+        ortuId = await widget.svc.cariOrangTua(_emailOrtu.text);
         if (ortuId == null) {
           setState(() {
             _busy = false;
-            _error = 'Orang Tua dengan no. HP itu belum terdaftar. '
+            _error = 'Orang Tua dengan email itu belum terdaftar. '
                 'Kosongkan kolom untuk menyimpan tanpa menautkan.';
           });
           return;
@@ -102,7 +110,19 @@ class _TambahPasienSheetState extends State<TambahPasienSheet> {
       );
 
   String? _wajib(String? v) => (v ?? '').trim().isEmpty ? 'Wajib diisi' : null;
-  String? _angka(String? v) => int.tryParse((v ?? '').trim()) == null ? 'Isi angka' : null;
+  String? _beratValid(String? v) {
+    final n = int.tryParse((v ?? '').trim());
+    if (n == null) return 'Isi angka';
+    if (n < 300 || n > 7000) return 'Berat harus 300-7000 gram';
+    return null;
+  }
+
+  String? _usiaValid(String? v) {
+    final n = int.tryParse((v ?? '').trim());
+    if (n == null) return 'Isi angka';
+    if (n < 20 || n > 45) return 'Usia harus 20-45 minggu';
+    return null;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -138,32 +158,33 @@ class _TambahPasienSheetState extends State<TambahPasienSheet> {
                 onSelectionChanged: (s) => setState(() => _jk = s.first),
               ),
               const SizedBox(height: 12),
-              Row(children: [
-                Expanded(
-                  child: TextFormField(
-                    controller: _berat,
-                    keyboardType: TextInputType.number,
-                    decoration: _dec('Berat lahir (gram)'),
-                    validator: _angka,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: TextFormField(
-                    controller: _usia,
-                    keyboardType: TextInputType.number,
-                    decoration: _dec('Usia kehamilan (minggu)'),
-                    validator: _angka,
-                  ),
-                ),
-              ]),
+              TextFormField(
+                controller: _berat,
+                keyboardType: TextInputType.number,
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                decoration: _dec('Berat lahir').copyWith(
+                    suffixText: 'gram',
+                    helperText: 'Dalam GRAM, bukan kg. Contoh: 3200'),
+                validator: _beratValid,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _usia,
+                keyboardType: TextInputType.number,
+                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                decoration: _dec('Usia kehamilan').copyWith(
+                    suffixText: 'minggu',
+                    helperText: 'Dalam MINGGU, bukan bulan. Contoh: 38'),
+                validator: _usiaValid,
+              ),
               const SizedBox(height: 12),
               TextFormField(controller: _alamat, decoration: _dec('Alamat'), validator: _wajib),
               const SizedBox(height: 12),
               TextFormField(
-                controller: _hp,
-                keyboardType: TextInputType.phone,
-                decoration: _dec('No. HP Orang Tua (opsional, untuk menautkan)'),
+                controller: _emailOrtu,
+                keyboardType: TextInputType.emailAddress,
+                autocorrect: false,
+                decoration: _dec('Email Orang Tua (opsional, untuk menautkan)'),
               ),
               if (_error != null)
                 Padding(

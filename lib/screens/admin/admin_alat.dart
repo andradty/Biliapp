@@ -18,6 +18,7 @@ class AdminAlat extends StatefulWidget {
 }
 
 class _AdminAlatState extends State<AdminAlat> {
+  late final Stream<List<Pasien>> _pasienS = widget.svc.pasienPuskesmas();
   String? _pasienId;
   final _cariC = TextEditingController();
   String _cari = '';
@@ -49,7 +50,7 @@ class _AdminAlatState extends State<AdminAlat> {
           child: ListView(padding: const EdgeInsets.all(20), children: [
             const SectionLabel('Mulai Pemeriksaan'),
             StreamBuilder<List<Pasien>>(
-              stream: widget.svc.pasienPuskesmas(),
+              stream: _pasienS,
               builder: (context, snap) {
                 final list = snap.data ?? <Pasien>[];
                 final terpilih = list.where((p) => p.id == _pasienId).toList();

@@ -18,6 +18,9 @@ class AdminPasien extends StatefulWidget {
 
 class _AdminPasienState extends State<AdminPasien> {
   String _q = '';
+  int _hal = 0;
+  late final Stream<List<Pasien>> _pasienS = widget.svc.pasienPuskesmas();
+  static const _perHal = 5;
 
   void _edit(Pasien p) => showModalBottomSheet(
     context: context,
@@ -48,15 +51,21 @@ class _AdminPasienState extends State<AdminPasien> {
           ),
           Expanded(
             child: StreamBuilder<List<Pasien>>(
-              stream: widget.svc.pasienPuskesmas(),
+              stream: _pasienS,
               builder: (context, snap) {
                 if (snap.hasError) return SingleChildScrollView(child: ErrorBox(snap.error!));
                 if (!snap.hasData) return const Center(child: CircularProgressIndicator());
                 final q = _q.trim().toLowerCase();
                 final list =
                 snap.data!.where((p) => q.isEmpty || p.nama.toLowerCase().contains(q)).toList();
+                final total = (list.length / _perHal).ceil();
+                final hal = total == 0 ? 0 : _hal.clamp(0, total - 1).toInt();
+                final tampil = list.skip(hal * _perHal).take(_perHal).toList();
                 return ListView(padding: const EdgeInsets.fromLTRB(20, 16, 20, 90), children: [
-                  SearchField(hint: 'Cari nama...', onChanged: (v) => setState(() => _q = v)),
+                  SearchField(hint: 'Cari nama...', onChanged: (v) => setState(() {
+                    _q = v;
+                    _hal = 0;
+                  })),
                   const SizedBox(height: 14),
                   if (list.isEmpty)
                     const Padding(
@@ -64,7 +73,7 @@ class _AdminPasienState extends State<AdminPasien> {
                       child: Text('Belum ada pasien. Tekan + untuk menambah.',
                           textAlign: TextAlign.center, style: TextStyle(color: AppColors.muted)),
                     ),
-                  for (final p in list)
+                  for (final p in tampil)
                     Container(
                       margin: const EdgeInsets.only(bottom: 10),
                       decoration: BoxDecoration(
@@ -96,6 +105,8 @@ class _AdminPasienState extends State<AdminPasien> {
                         ),
                       )),
                     ),
+                  PaginasiBar(
+                      halaman: hal, total: total, onUbah: (h) => setState(() => _hal = h)),
                 ]);
               },
             ),
