@@ -12,9 +12,15 @@ import '../riwayat_pasien_screen.dart';
 /// dan hasil terakhir beberapa pasien. Tanpa kategori status.
 class RingkasanAdmin extends StatelessWidget {
   final List<Pemeriksaan> data; // urut waktu menurun
+  final List<Pemeriksaan> dataGrafik; // rentang lebih panjang untuk grafik
   final Map<String, Pasien> pasien;
   final DataService svc;
-  const RingkasanAdmin({super.key, required this.data, required this.pasien, required this.svc});
+  const RingkasanAdmin(
+      {super.key,
+      required this.data,
+      required this.dataGrafik,
+      required this.pasien,
+      required this.svc});
 
   @override
   Widget build(BuildContext context) {
@@ -38,7 +44,7 @@ class RingkasanAdmin extends StatelessWidget {
         _Kotak('Rata-rata %', rata == null ? '-' : fmtKadar(rata)),
       ]),
       const SizedBox(height: 10),
-      BarHarianChart(data: sah),
+      BarHarianChart(data: dataGrafik),
       const SectionLabel('Hasil Terakhir Pasien'),
       if (terbaru.isEmpty)
         Container(

@@ -167,6 +167,7 @@ class _DialogBatalState extends State<_DialogBatal> {
   Widget build(BuildContext context) {
     final ok = _c.text.trim().length >= 5;
     return AlertDialog(
+      scrollable: true,
       title: const Text('Batalkan pemeriksaan?'),
       content: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
         const Text(

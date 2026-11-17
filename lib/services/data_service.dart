@@ -63,8 +63,8 @@ class DataService {
       .map(_periksa);
 
   /// 30 hari terakhir untuk ringkasan (memakai index puskesmas_id + waktu desc).
-  Stream<List<Pemeriksaan>> pemeriksaan30Hari() {
-    final awal = DateTime.now().subtract(const Duration(days: 30));
+  Stream<List<Pemeriksaan>> pemeriksaan30Hari({int hari = 30}) {
+    final awal = DateTime.now().subtract(Duration(days: hari));
     return _db
         .collection('pemeriksaan')
         .where('puskesmas_id', isEqualTo: user.puskesmasId)

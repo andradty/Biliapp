@@ -24,6 +24,8 @@ class AdminHome extends StatefulWidget {
 class _AdminHomeState extends State<AdminHome> {
   String _q = '';
   late final Stream<List<Pemeriksaan>> _s30 = widget.svc.pemeriksaan30Hari();
+  // Data lebih panjang (~6 bulan) khusus grafik per minggu/bulan.
+  late final Stream<List<Pemeriksaan>> _sGrafik = widget.svc.pemeriksaan30Hari(hari: 190);
 
   @override
   Widget build(BuildContext context) {
@@ -100,7 +102,14 @@ class _AdminHomeState extends State<AdminHome> {
                       StreamBuilder<List<Pemeriksaan>>(
                         stream: _s30,
                         builder: (c, s30) => s30.hasData
-                            ? RingkasanAdmin(data: s30.data!, pasien: pasien, svc: widget.svc)
+                            ? StreamBuilder<List<Pemeriksaan>>(
+                                stream: _sGrafik,
+                                builder: (c, sg) => RingkasanAdmin(
+                                    data: s30.data!,
+                                    dataGrafik: sg.data ?? s30.data!,
+                                    pasien: pasien,
+                                    svc: widget.svc),
+                              )
                             : const SizedBox.shrink(),
                       ),
                       const SectionLabel('Pemeriksaan Terakhir'),

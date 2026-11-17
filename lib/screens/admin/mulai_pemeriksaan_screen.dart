@@ -186,6 +186,7 @@ class _MulaiPemeriksaanScreenState extends State<MulaiPemeriksaanScreen> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (c) => AlertDialog(
+        scrollable: true,
         title: const Text('Simpan pemeriksaan?'),
         content: Text('Hasil ${fmtKadar(nilai)} $kSatuan untuk ${_pasien!.nama} tidak dapat '
             'diubah setelah disimpan.'),

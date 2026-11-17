@@ -96,6 +96,7 @@ class _EditPasienSheetState extends State<EditPasienSheet> {
     final ya = await showDialog<bool>(
       context: context,
       builder: (c) => AlertDialog(
+        scrollable: true,
         title: Text(judul),
         content: Text(isi),
         actions: [

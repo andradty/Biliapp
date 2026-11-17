@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../models/agenda.dart';
 import '../models/app_user.dart';
 import '../models/pasien.dart';
 import '../models/pemeriksaan.dart';
@@ -39,6 +40,9 @@ class _NotificationBellState extends State<NotificationBell> {
   late final Stream<List<Pemeriksaan>> _periksa = widget.user.isPetugas
       ? widget.svc.pemeriksaanTerakhir(limit: 30)
       : widget.svc.pemeriksaanAnak();
+  // Jadwal pemeriksaan dari Puskesmas (hanya Orang Tua).
+  late final Stream<List<Agenda>> _agenda =
+      widget.user.isPetugas ? Stream.value(<Agenda>[]) : widget.svc.agendaAnak();
 
   Widget _tombol(int belumDibaca) => Container(
         padding: const EdgeInsets.all(10),
@@ -58,7 +62,9 @@ class _NotificationBellState extends State<NotificationBell> {
       stream: _pasien,
       builder: (context, ps) => StreamBuilder<List<Pemeriksaan>>(
         stream: _periksa,
-        builder: (context, es) {
+        builder: (context, es) => StreamBuilder<List<Agenda>>(
+        stream: _agenda,
+        builder: (context, ag) {
           final nama = {for (final p in ps.data ?? <Pasien>[]) p.id: p.nama};
           var items = es.data ?? <Pemeriksaan>[];
           if (widget.user.isPetugas) {
@@ -67,7 +73,11 @@ class _NotificationBellState extends State<NotificationBell> {
                 .toList();
           }
           items = items.take(10).toList();
-          final belum = items.where((e) => !_notifDibaca.contains(e.id)).length;
+          final agenda = (ag.data ?? <Agenda>[]).take(5).toList();
+          String kunciAgenda(Agenda a) => 'agenda_${a.id}';
+          final belum = items.where((e) => !_notifDibaca.contains(e.id)).length +
+              agenda.where((a) => !_notifDibaca.contains(kunciAgenda(a))).length;
+          final kosong = items.isEmpty && agenda.isEmpty;
 
           return PopupMenuButton<Object>(
             tooltip: 'Notifikasi',
@@ -78,7 +88,12 @@ class _NotificationBellState extends State<NotificationBell> {
             color: Colors.white,
             onSelected: (v) {
               if (v == 'baca_semua') {
-                setState(() => _notifDibaca.addAll(items.map((e) => e.id)));
+                setState(() {
+                  _notifDibaca.addAll(items.map((e) => e.id));
+                  _notifDibaca.addAll(agenda.map(kunciAgenda));
+                });
+              } else if (v is Agenda) {
+                setState(() => _notifDibaca.add(kunciAgenda(v)));
               } else if (v is Pemeriksaan) {
                 setState(() => _notifDibaca.add(v.id));
                 Navigator.push(
@@ -103,7 +118,7 @@ class _NotificationBellState extends State<NotificationBell> {
                 ),
               ),
               const PopupMenuDivider(height: 1),
-              if (items.isEmpty)
+              if (kosong)
                 const PopupMenuItem<Object>(
                   enabled: false,
                   height: 110,
@@ -117,6 +132,43 @@ class _NotificationBellState extends State<NotificationBell> {
                   ),
                 )
               else ...[
+                for (final a in agenda)
+                  PopupMenuItem<Object>(
+                    value: a,
+                    child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                      Padding(
+                        padding: const EdgeInsets.only(top: 6, right: 10),
+                        child: CircleAvatar(
+                          radius: 4,
+                          backgroundColor: _notifDibaca.contains(kunciAgenda(a))
+                              ? Colors.transparent
+                              : AppColors.orange1,
+                        ),
+                      ),
+                      Expanded(
+                        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                          Text(
+                            'Jadwal pemeriksaan ${nama[a.pasienId] ?? 'anak'}',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              color: AppColors.ink,
+                              fontWeight: _notifDibaca.contains(kunciAgenda(a))
+                                  ? FontWeight.w500
+                                  : FontWeight.w700,
+                            ),
+                          ),
+                          Text('${fmtTanggal(a.tanggal)} • ${a.hariLagiLabel}',
+                              style: const TextStyle(fontSize: 12, color: AppColors.orange2)),
+                          if (a.catatan.isNotEmpty)
+                            Text(a.catatan,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(fontSize: 11, color: AppColors.muted)),
+                        ]),
+                      ),
+                    ]),
+                  ),
                 for (final e in items)
                   PopupMenuItem<Object>(
                     value: e,
@@ -178,6 +230,7 @@ class _NotificationBellState extends State<NotificationBell> {
             child: _tombol(belum),
           );
         },
+        ),
       ),
     );
   }

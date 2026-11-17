@@ -7,7 +7,6 @@ import '../../models/pemeriksaan.dart';
 import '../../services/data_service.dart';
 import '../../theme.dart';
 import '../../widgets/common.dart';
-import '../../widgets/edukasi_card.dart';
 import '../../widgets/notification_bell.dart';
 import '../hasil_screen.dart';
 
@@ -274,14 +273,6 @@ class _UserHomeState extends State<UserHome> {
                   if (es.hasError) return SingleChildScrollView(child: ErrorBox(es.error!));
                   final semua = es.data ?? <Pemeriksaan>[];
 
-                  Pemeriksaan? terbaru;
-                  for (final e in semua) {
-                    if (!e.dibatalkan && namaAnak.containsKey(e.pasienId)) {
-                      terbaru = e;
-                      break;
-                    }
-                  }
-
                   return ListView(padding: const EdgeInsets.fromLTRB(20, 20, 20, 90), children: [
                     // 1. Kartu Status Arham (persis Image 10)
                     _kartuHasilTerakhir(anak, semua),
@@ -337,10 +328,6 @@ class _UserHomeState extends State<UserHome> {
                       for (final a in anak) _kartuAnak(a, semua),
                       const SizedBox(height: 4),
                       GradientButton(label: 'Lihat Riwayat Anak', onPressed: widget.onLihatAnak),
-                    ],
-                    if (terbaru != null) ...[
-                      const SectionLabel('Memahami Bilirubin'),
-                      const EdukasiCard(),
                     ],
                   ]);
                 },

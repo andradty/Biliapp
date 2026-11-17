@@ -37,6 +37,7 @@ class _AgendaPasienSectionState extends State<AgendaPasienSection> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (c) => AlertDialog(
+        scrollable: true,
         title: Text(a.terlewat ? 'Hapus jadwal terlewat?' : 'Batalkan jadwal?'),
         content: Text(a.terlewat
             ? 'Jadwal ${fmtTanggal(a.tanggal)} yang terlewat akan dihapus dari daftar.'
@@ -167,6 +168,7 @@ class _DialogJadwalState extends State<_DialogJadwal> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
+      scrollable: true,
       title: const Text('Jadwalkan pemeriksaan'),
       content: Column(mainAxisSize: MainAxisSize.min, children: [
         OutlinedButton.icon(

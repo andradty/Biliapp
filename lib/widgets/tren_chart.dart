@@ -35,7 +35,7 @@ class TrenChart extends StatelessWidget {
             style: const TextStyle(fontSize: 12, color: AppColors.muted)),
         const SizedBox(height: 10),
         SizedBox(
-          height: 150,
+          height: 170,
           width: double.infinity,
           child: CustomPaint(painter: _TrenPainter(pts, awal, sekarang, satuan)),
         ),
@@ -79,7 +79,7 @@ class _TrenPainter extends CustomPainter {
     final grid = Paint()
       ..color = const Color(0xFFE3E8EC)
       ..strokeWidth = 1;
-    for (final f in [0.0, 0.5, 1.0]) {
+    for (final f in [0.0, 0.25, 0.5, 0.75, 1.0]) {
       final y = area.bottom - area.height * f;
       canvas.drawLine(Offset(area.left, y), Offset(area.right, y), grid);
       _teks(canvas, (maks * f).toStringAsFixed(0), Offset(area.left - 6, y));
@@ -106,10 +106,31 @@ class _TrenPainter extends CustomPainter {
     }
     if (pts.length > 1) canvas.drawPath(path, garis);
 
+    // Garis bantu vertikal tiap titik + angka hasil.
+    final bantu = Paint()
+      ..color = AppColors.teal2.withValues(alpha: 0.25)
+      ..strokeWidth = 1;
+    final tampilAngka = pts.length <= 14;
+    for (final e in pts) {
+      final o = titik(e);
+      canvas.drawLine(o, Offset(o.dx, area.bottom), bantu);
+    }
     for (final e in pts) {
       final o = titik(e);
       canvas.drawCircle(o, 5.5, Paint()..color = Colors.white);
       canvas.drawCircle(o, 4, Paint()..color = AppColors.teal);
+      if (tampilAngka) {
+        final tp = TextPainter(
+          text: TextSpan(
+              text: fmtKadar(e.hasil),
+              style: const TextStyle(
+                  fontSize: 10, fontWeight: FontWeight.w700, color: AppColors.ink)),
+          textDirection: TextDirection.ltr,
+        )..layout();
+        final dx = (o.dx - tp.width / 2).clamp(area.left, size.width - tp.width).toDouble();
+        final dy = o.dy - 8 - tp.height < 0 ? o.dy + 8 : o.dy - 8 - tp.height;
+        tp.paint(canvas, Offset(dx, dy));
+      }
     }
   }
 

@@ -75,6 +75,7 @@ class _DaftarKalibrasiState extends State<_DaftarKalibrasi> {
     final ya = await showDialog<bool>(
       context: context,
       builder: (c) => AlertDialog(
+        scrollable: true,
         title: const Text('Jadikan kalibrasi aktif?'),
         content: Text('Pemeriksaan berikutnya memakai kalibrasi ${k.id}. '
             'Pastikan alat juga memakai koefisien ini.'),
