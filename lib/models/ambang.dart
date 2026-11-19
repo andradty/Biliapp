@@ -1,18 +1,6 @@
-/// Ambang status hasil. Hasil dinyatakan dalam PERSEN (% jaundice) karena nilai
-/// dihitung dari sinyal fotodioda dan tidak dikorelasikan ke mg/dL.
-/// Angka batas masih SEMENTARA sampai ditetapkan tim medis/dosen pembimbing;
-/// cukup ubah di sini. Jangan dipakai sebagai dasar keputusan klinis sebelum divalidasi.
+/// Hasil pemeriksaan dinyatakan dalam PERSEN (% pengecekan bilirubin) dari sinyal fotodioda.
+/// Aplikasi tidak menggunakan ambang batas Normal / Warning / Kritis.
 class AmbangStatus {
-  static const double waspada = 50.0;
-  static const double kritis = 75.0;
-
-  /// Batas yang sama dengan Firestore rules (0-100 untuk satuan %).
+  /// Batas maksimum persentase pengecekan bilirubin (0-100%).
   static const double maks = 100.0;
-
-  /// Mengembalikan 'normal' | 'waspada' | 'kritis' (sesuai statusColor di common.dart).
-  static String dari(double persen) {
-    if (persen >= kritis) return 'kritis';
-    if (persen >= waspada) return 'waspada';
-    return 'normal';
-  }
 }

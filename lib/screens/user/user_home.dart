@@ -8,7 +8,6 @@ import '../../services/data_service.dart';
 import '../../theme.dart';
 import '../../widgets/common.dart';
 import '../../widgets/notification_bell.dart';
-import '../hasil_screen.dart';
 
 class UserHome extends StatefulWidget {
   final AppUser user;
@@ -59,7 +58,7 @@ class _UserHomeState extends State<UserHome> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
-            'Hasil terakhir $nama',
+            'Pemeriksaan terakhir $nama',
             style: const TextStyle(
               fontSize: 15.5,
               fontWeight: FontWeight.w600,
@@ -67,9 +66,9 @@ class _UserHomeState extends State<UserHome> {
             ),
           ),
           Text(
-            terakhir == null ? 'Belum ada' : '${fmtKadar(terakhir.hasil)} ${terakhir.satuan}',
+            terakhir == null ? 'Belum ada' : fmtTanggal(terakhir.waktu),
             style: TextStyle(
-              fontSize: 15.5,
+              fontSize: 14.5,
               fontWeight: FontWeight.w800,
               color: terakhir == null ? AppColors.muted : AppColors.teal,
             ),
@@ -80,8 +79,8 @@ class _UserHomeState extends State<UserHome> {
   }
 
   Widget _kartuAnak(Pasien a, List<Pemeriksaan> semua) {
-    final terakhir = semua.where((e) => e.pasienId == a.id && !e.dibatalkan).toList();
-    final t = terakhir.isEmpty ? null : terakhir.first;
+    final riwayatAnak = semua.where((e) => e.pasienId == a.id && !e.dibatalkan).toList();
+    final t = riwayatAnak.isEmpty ? null : riwayatAnak.first;
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
@@ -93,10 +92,7 @@ class _UserHomeState extends State<UserHome> {
         type: MaterialType.transparency,
         child: InkWell(
           borderRadius: BorderRadius.circular(16),
-          onTap: t == null
-              ? null
-              : () => Navigator.push(context,
-                  MaterialPageRoute(builder: (_) => HasilScreen(p: t, namaPasien: a.nama))),
+          onTap: widget.onLihatAnak,
           child: Padding(
             padding: const EdgeInsets.all(14),
             child: Row(children: [
@@ -119,9 +115,9 @@ class _UserHomeState extends State<UserHome> {
                     textAlign: TextAlign.right,
                     style: TextStyle(fontSize: 12, color: AppColors.muted))
               else
-                Text('${fmtKadar(t.hasil)} ${t.satuan}',
+                Text('${riwayatAnak.length}x diperiksa',
                     style: const TextStyle(
-                        fontSize: 14, fontWeight: FontWeight.w800, color: AppColors.teal)),
+                        fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.teal)),
             ]),
           ),
         ),

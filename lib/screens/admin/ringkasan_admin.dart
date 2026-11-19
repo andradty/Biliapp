@@ -31,7 +31,6 @@ class RingkasanAdmin extends StatelessWidget {
     for (final e in sah) {
       terakhir.putIfAbsent(e.pasienId, () => e);
     }
-    final rata = sah.isEmpty ? null : sah.map((e) => e.hasil).reduce((a, b) => a + b) / sah.length;
     final terbaru = terakhir.values.where((e) => pasien[e.pasienId] != null).take(5).toList();
 
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -39,9 +38,9 @@ class RingkasanAdmin extends StatelessWidget {
       Row(children: [
         _Kotak('Pemeriksaan', '${sah.length}'),
         const SizedBox(width: 10),
-        _Kotak('Pasien', '${terakhir.length}'),
+        _Kotak('Pasien Diperiksa', '${terakhir.length}'),
         const SizedBox(width: 10),
-        _Kotak('Rata-rata %', rata == null ? '-' : fmtKadar(rata)),
+        _Kotak('Total Pasien', '${pasien.length}'),
       ]),
       const SizedBox(height: 10),
       BarHarianChart(data: dataGrafik),

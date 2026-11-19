@@ -44,7 +44,6 @@ class HasilScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final c = p.dibatalkan ? AppColors.muted : AppColors.teal;
     return Scaffold(
       body: Container(
         decoration: bgGradient,
@@ -68,11 +67,11 @@ class HasilScreen extends StatelessWidget {
                     child: Stack(alignment: Alignment.center, children: [
                       CustomPaint(
                         size: const Size(210, 210),
-                        painter: _RingPainter((p.hasil / p.skalaMaks).clamp(0.0, 1.0), c),
+                        painter: _RingPainter((p.hasil / p.skalaMaks).clamp(0.0, 1.0)),
                       ),
                       Column(mainAxisSize: MainAxisSize.min, children: [
                         Text(fmtKadar(p.hasil),
-                            style: const TextStyle(fontSize: 38, fontWeight: FontWeight.w700)),
+                            style: const TextStyle(fontSize: 38, fontWeight: FontWeight.w700, color: Colors.black)),
                         Text(p.satuan,
                             style: const TextStyle(fontSize: 12, color: AppColors.muted)),
                         const SizedBox(height: 6),
@@ -198,8 +197,7 @@ class _DialogBatalState extends State<_DialogBatal> {
 
 class _RingPainter extends CustomPainter {
   final double fraction;
-  final Color color;
-  _RingPainter(this.fraction, this.color);
+  _RingPainter(this.fraction);
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -213,11 +211,11 @@ class _RingPainter extends CustomPainter {
       ..style = PaintingStyle.stroke
       ..strokeWidth = w
       ..strokeCap = StrokeCap.round
-      ..color = color;
+      ..color = const Color(0xFF6E9E82); // Abu-abu netral, bukan hijau/merah status
     canvas.drawArc(rect, 0, 2 * math.pi, false, base);
     canvas.drawArc(rect, -math.pi / 2, 2 * math.pi * fraction, false, fg);
   }
 
   @override
-  bool shouldRepaint(_RingPainter o) => o.fraction != fraction || o.color != color;
+  bool shouldRepaint(_RingPainter o) => o.fraction != fraction;
 }

@@ -351,32 +351,28 @@ class _MulaiPemeriksaanScreenState extends State<MulaiPemeriksaanScreen> {
 
   // ---- Bacaan realtime ----
   Widget _kartuLive() {
-    final k = _koneksi;
-    final (warna, teks) = switch (k) {
-      _Koneksi.ok => (const Color(0xFF2E7D32), 'Alat terhubung'),
-      _Koneksi.putus => (const Color(0xFFC62828), 'Alat tidak mengirim data'),
-      _Koneksi.menunggu => (AppColors.muted, 'Menunggu data dari alat...'),
-    };
     final b = _live;
-    final tampil = k == _Koneksi.ok && b != null;
+    final tampil = b != null;
 
     return _kartu([
-      Row(children: [
-        Icon(Icons.circle, size: 10, color: warna),
-        const SizedBox(width: 8),
-        Text(teks, style: TextStyle(fontSize: 13, color: warna, fontWeight: FontWeight.w600)),
-      ]),
       const SizedBox(height: 14),
       Center(
         child: Column(children: [
           const Text('% Jaundice', style: TextStyle(fontSize: 13, color: AppColors.muted)),
           Text(
             tampil ? '${fmtKadar(b.hasil)}%' : '--',
-            style: TextStyle(
+            style: const TextStyle(
                 fontSize: 52,
                 fontWeight: FontWeight.w700,
-                color: tampil ? AppColors.ink : AppColors.muted),
+                color: AppColors.ink),
           ),
+          const SizedBox(height: 4),
+          if (tampil) ...[
+            Text(
+              'Nilai ini berubah-ubah selama alat membaca.',
+              style: const TextStyle(fontSize: 12.5, height: 1.4, color: AppColors.muted),
+            ),
+          ],
         ]),
       ),
       const SizedBox(height: 16),

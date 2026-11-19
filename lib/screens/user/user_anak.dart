@@ -55,13 +55,12 @@ class UserAnak extends StatelessWidget {
                       .toList();
 
                   final totalPemeriksaan = semuaPemeriksaan.length;
-                  final rataRata = totalPemeriksaan == 0
-                      ? 0.0
-                      : semuaPemeriksaan.map((e) => e.hasil).reduce((a, b) => a + b) /
-                          totalPemeriksaan;
-                  final labelTerakhir = totalPemeriksaan == 0
-                      ? '-'
+                  final labelPersen = totalPemeriksaan == 0
+                      ? '9,8%'
                       : '${fmtKadar(semuaPemeriksaan.first.hasil)}%';
+                  final tanggalTerakhir = totalPemeriksaan == 0
+                      ? '-'
+                      : fmtTanggalPendek(semuaPemeriksaan.first.waktu);
 
                   return ListView(
                     padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
@@ -151,7 +150,7 @@ class UserAnak extends StatelessWidget {
                       ),
                       const SizedBox(height: 14),
 
-                      // 2. Tiga Kotak Statistik: Total | Rata-rata | Hasil Terakhir (Image 13)
+                      // 2. Tiga Kotak Statistik di tab Anak: Pemeriksaan | Kadar Bilirubin (%) | Terakhir Periksa
                       Container(
                         width: double.infinity,
                         padding: const EdgeInsets.all(14),
@@ -166,28 +165,26 @@ class UserAnak extends StatelessWidget {
                           children: [
                             Expanded(
                               child: _StatMiniBox(
-                                topText: totalPemeriksaan == 0 ? '8' : '$totalPemeriksaan',
-                                topColor: const Color(0xFF0A748E),
+                                topText: totalPemeriksaan == 0 ? '0' : '$totalPemeriksaan',
+                                topColor: Colors.grey,
                                 bottomText: 'Pemeriksaan',
                               ),
                             ),
                             const SizedBox(width: 8),
                             Expanded(
                               child: _StatMiniBox(
-                                topText: totalPemeriksaan == 0
-                                    ? '11,4'
-                                    : fmtKadar(rataRata),
-                                topColor: const Color(0xFFF59E0B),
-                                bottomText: 'Rata-rata %',
+                                topText: labelPersen,
+                                topColor: AppColors.teal,
+                                bottomText: 'Bilirubin (%)',
+                                bgColor: const Color(0xFFE0F2F7),
                               ),
                             ),
                             const SizedBox(width: 8),
                             Expanded(
                               child: _StatMiniBox(
-                                topText: labelTerakhir,
-                                topColor: AppColors.teal,
-                                bottomText: 'Hasil terakhir',
-                                bgColor: const Color(0xFFE0F2F7),
+                                topText: tanggalTerakhir,
+                                topColor: Colors.grey,
+                                bottomText: 'Terakhir periksa',
                               ),
                             ),
                           ],
@@ -207,7 +204,7 @@ class UserAnak extends StatelessWidget {
                       const SizedBox(height: 12),
 
                       if (semuaPemeriksaan.isEmpty)
-                        // Contoh placeholder seperti Image 13 (12 Okt 2026 • 09:10, 9,8 mg/dL Normal)
+                        // Contoh placeholder seperti Image 13 (12 Okt 2026 • 09:10, 9,8 %)
                         Container(
                           width: double.infinity,
                           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
