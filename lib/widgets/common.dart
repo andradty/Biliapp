@@ -10,6 +10,15 @@ String fmtJam(DateTime d) =>
     '${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}';
 String fmtKadar(double v) => v.toStringAsFixed(1).replaceAll('.', ',');
 
+/// Konsentrasi (C) bernilai sangat kecil (~1e-6): tampil notasi ilmiah, mis. `8,32×10⁻⁶`.
+String fmtKonsentrasi(num v) {
+  if (v == 0) return '0';
+  final e = v.toStringAsExponential(2).split('e'); // '8.32','-6'
+  const sup = {'-': '⁻', '0': '⁰', '1': '¹', '2': '²', '3': '³', '4': '⁴', '5': '⁵', '6': '⁶', '7': '⁷', '8': '⁸', '9': '⁹'};
+  final pangkat = int.parse(e[1]).toString().split('').map((c) => sup[c] ?? c).join();
+  return '${e[0].replaceAll('.', ',')}×10$pangkat';
+}
+
 
 /// Header berlatar gradien teal dengan dekorasi lingkaran hijau elegan (sesuai Image 7 & 8)
 class GradientHeader extends StatelessWidget {

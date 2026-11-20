@@ -1,10 +1,7 @@
-import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:flutter/material.dart' show AlertDialog, BuildContext, Color, Colors, Column, CrossAxisAlignment, FilledButton, FontWeight, Icon, Icons, MainAxisSize, ScaffoldMessenger, SelectableText, SizedBox, SnackBar, Text, TextAlign, TextButton, TextStyle, Navigator, showDialog;
-import 'package:open_filex/open_filex.dart';
-import 'package:path_provider/path_provider.dart';
+import 'package:flutter/foundation.dart' show debugPrint, kIsWeb;
+import 'package:flutter/material.dart' show BuildContext, ScaffoldMessenger, SnackBar, Text;
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
@@ -12,6 +9,7 @@ import 'package:printing/printing.dart';
 import '../models/pasien.dart';
 import '../models/pemeriksaan.dart';
 import '../widgets/common.dart' show fmtJam, fmtKadar, fmtTanggal;
+import 'unduh_file.dart';
 
 /// Pembuat PDF hasil pemeriksaan. Hanya memakai karakter ASCII/Latin-1 agar
 /// aman dengan font bawaan PDF (tanpa embed font).
@@ -32,53 +30,53 @@ class PdfService {
       'dengan tenaga kesehatan untuk penilaian dan tindak lanjut.';
 
   static pw.Widget _header(String judul) => pw.Container(
-        padding: const pw.EdgeInsets.all(16),
-        decoration: pw.BoxDecoration(color: _teal, borderRadius: pw.BorderRadius.circular(10)),
-        child: pw.Column(crossAxisAlignment: pw.CrossAxisAlignment.start, children: [
-          pw.Text('BiliCheck',
-              style: pw.TextStyle(
-                  color: PdfColors.white, fontSize: 20, fontWeight: pw.FontWeight.bold)),
-          pw.SizedBox(height: 2),
-          pw.Text(judul, style: const pw.TextStyle(color: PdfColors.white, fontSize: 12)),
-        ]),
-      );
+    padding: const pw.EdgeInsets.all(16),
+    decoration: pw.BoxDecoration(color: _teal, borderRadius: pw.BorderRadius.circular(10)),
+    child: pw.Column(crossAxisAlignment: pw.CrossAxisAlignment.start, children: [
+      pw.Text('BiliCheck',
+          style: pw.TextStyle(
+              color: PdfColors.white, fontSize: 20, fontWeight: pw.FontWeight.bold)),
+      pw.SizedBox(height: 2),
+      pw.Text(judul, style: const pw.TextStyle(color: PdfColors.white, fontSize: 12)),
+    ]),
+  );
 
   static pw.Widget _baris(String k, String v) => pw.Padding(
-        padding: const pw.EdgeInsets.symmetric(vertical: 3),
-        child: pw.Row(crossAxisAlignment: pw.CrossAxisAlignment.start, children: [
-          pw.SizedBox(
-              width: 130, child: pw.Text(k, style: const pw.TextStyle(color: _muted, fontSize: 11))),
-          pw.Expanded(child: pw.Text(v, style: const pw.TextStyle(fontSize: 11))),
-        ]),
-      );
+    padding: const pw.EdgeInsets.symmetric(vertical: 3),
+    child: pw.Row(crossAxisAlignment: pw.CrossAxisAlignment.start, children: [
+      pw.SizedBox(
+          width: 130, child: pw.Text(k, style: const pw.TextStyle(color: _muted, fontSize: 11))),
+      pw.Expanded(child: pw.Text(v, style: const pw.TextStyle(fontSize: 11))),
+    ]),
+  );
 
   static List<pw.Widget> _dataPasien(String nama, Pasien? p) => [
-        _baris('Nama pasien', nama),
-        if (p != null) ...[
-          _baris('Jenis kelamin', p.jenisKelamin == 'L' ? 'Laki-laki' : 'Perempuan'),
-          if (p.tanggalLahir != null)
-            _baris('Tanggal lahir', '${fmtTanggal(p.tanggalLahir!)} (${p.usia})'),
-          if (p.usiaKehamilan != null) _baris('Usia kehamilan', '${p.usiaKehamilan} minggu'),
-          if (p.beratLahir != null) _baris('Berat lahir', '${p.beratLahir} gram'),
-        ],
-      ];
+    _baris('Nama pasien', nama),
+    if (p != null) ...[
+      _baris('Jenis kelamin', p.jenisKelamin == 'L' ? 'Laki-laki' : 'Perempuan'),
+      if (p.tanggalLahir != null)
+        _baris('Tanggal lahir', '${fmtTanggal(p.tanggalLahir!)} (${p.usia})'),
+      if (p.usiaKehamilan != null) _baris('Usia kehamilan', '${p.usiaKehamilan} minggu'),
+      if (p.beratLahir != null) _baris('Berat lahir', '${p.beratLahir} gram'),
+    ],
+  ];
 
   static pw.Widget _footer(pw.Context c) => pw.Row(
-        mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-        children: [
-          pw.Text('Dicetak ${fmtTanggal(DateTime.now())} ${fmtJam(DateTime.now())}',
-              style: const pw.TextStyle(color: _muted, fontSize: 9)),
-          pw.Text('Halaman ${c.pageNumber} / ${c.pagesCount}',
-              style: const pw.TextStyle(color: _muted, fontSize: 9)),
-        ],
-      );
+    mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+    children: [
+      pw.Text('Dicetak ${fmtTanggal(DateTime.now())} ${fmtJam(DateTime.now())}',
+          style: const pw.TextStyle(color: _muted, fontSize: 9)),
+      pw.Text('Halaman ${c.pageNumber} / ${c.pagesCount}',
+          style: const pw.TextStyle(color: _muted, fontSize: 9)),
+    ],
+  );
 
   static pw.Widget _catatan() => pw.Container(
-        padding: const pw.EdgeInsets.all(10),
-        decoration: pw.BoxDecoration(
-            border: pw.Border.all(color: _garis), borderRadius: pw.BorderRadius.circular(8)),
-        child: pw.Text(_disclaimer, style: const pw.TextStyle(fontSize: 9.5, color: _muted)),
-      );
+    padding: const pw.EdgeInsets.all(10),
+    decoration: pw.BoxDecoration(
+        border: pw.Border.all(color: _garis), borderRadius: pw.BorderRadius.circular(8)),
+    child: pw.Text(_disclaimer, style: const pw.TextStyle(fontSize: 9.5, color: _muted)),
+  );
 
   // ---------------------------------------------------------------- hasil tunggal
   static Future<Uint8List> hasilBytes(Pemeriksaan p, String namaPasien, {Pasien? pasien}) async {
@@ -121,7 +119,7 @@ class PdfService {
           pw.SizedBox(height: 10),
           pw.Text(
               'Pemeriksaan ini dibatalkan oleh petugas dan tidak dipakai sebagai acuan.'
-              '${(p.alasanBatal ?? '').isEmpty ? '' : ' Alasan: ${p.alasanBatal}'}',
+                  '${(p.alasanBatal ?? '').isEmpty ? '' : ' Alasan: ${p.alasanBatal}'}',
               style: const pw.TextStyle(fontSize: 10, color: PdfColor.fromInt(0xFFC62828))),
         ],
         pw.SizedBox(height: 18),
@@ -136,7 +134,7 @@ class PdfService {
     final doc = pw.Document(title: 'Riwayat ${pasien.nama}', author: 'BiliCheck');
     final sah = data.where((e) => !e.dibatalkan).toList();
     final rata =
-        sah.isEmpty ? null : sah.map((e) => e.hasil).reduce((a, b) => a + b) / sah.length;
+    sah.isEmpty ? null : sah.map((e) => e.hasil).reduce((a, b) => a + b) / sah.length;
 
     final baris = <List<String>>[
       for (var i = 0; i < data.length; i++)
@@ -170,7 +168,7 @@ class PdfService {
             headers: ['No', 'Tanggal', 'Jam', 'Hasil', 'Keterangan'],
             data: baris,
             headerStyle:
-                pw.TextStyle(color: PdfColors.white, fontSize: 10, fontWeight: pw.FontWeight.bold),
+            pw.TextStyle(color: PdfColors.white, fontSize: 10, fontWeight: pw.FontWeight.bold),
             headerDecoration: const pw.BoxDecoration(color: _teal),
             cellStyle: const pw.TextStyle(fontSize: 10),
             cellAlignment: pw.Alignment.centerLeft,
@@ -197,7 +195,7 @@ class PdfService {
       {Pasien? pasien}) async {
     await _unduh(
       context,
-      () => hasilBytes(p, namaPasien, pasien: pasien),
+          () => hasilBytes(p, namaPasien, pasien: pasien),
       'BiliCheck_Hasil_${_aman(namaPasien)}_${_tgl(p.waktu)}.pdf',
     );
   }
@@ -205,7 +203,7 @@ class PdfService {
   static Future<void> unduhRiwayat(BuildContext context, Pasien pasien, List<Pemeriksaan> data) async {
     await _unduh(
       context,
-      () => riwayatBytes(pasien, data),
+          () => riwayatBytes(pasien, data),
       'BiliCheck_Riwayat_${_aman(pasien.nama)}_${_tgl(DateTime.now())}.pdf',
     );
   }
@@ -215,68 +213,19 @@ class PdfService {
     final messenger = ScaffoldMessenger.of(context);
     try {
       final bytes = await buat();
+      debugPrint('PDF: bytes=${bytes.length}, web=$kIsWeb');
       if (kIsWeb) {
         // Browser: unduhan ditangani browser.
         await Printing.sharePdf(bytes: bytes, filename: namaFile);
         return;
       }
-      final path = await _simpan(bytes, namaFile);
+      final path = await UnduhFile.simpan(bytes, namaFile);
+      debugPrint('PDF: tersimpan di $path, mounted=${context.mounted}');
       if (!context.mounted) return;
-      await _modalBerhasil(context, namaFile, path);
-    } catch (e) {
+      await UnduhFile.modalBerhasil(context, 'PDF', namaFile, path);
+    } catch (e, st) {
+      debugPrint('PDF GAGAL: $e\n$st');
       messenger.showSnackBar(SnackBar(content: Text('Gagal mengunduh PDF: $e')));
     }
-  }
-
-  static Future<String> _simpan(Uint8List bytes, String namaFile) async {
-    Directory? base;
-    if (Platform.isAndroid) {
-      base = await getExternalStorageDirectory(); // .../Android/data/<paket>/files
-    } else {
-      base = await getDownloadsDirectory();
-    }
-    base ??= await getApplicationDocumentsDirectory();
-    final dir = Directory('${base.path}${Platform.pathSeparator}BiliCheck');
-    if (!await dir.exists()) await dir.create(recursive: true);
-
-    var nama = namaFile;
-    if (await File('${dir.path}${Platform.pathSeparator}$nama').exists()) {
-      final n = DateTime.now();
-      String d(int v) => v.toString().padLeft(2, '0');
-      nama = namaFile.replaceFirst(RegExp(r'\.pdf$'), '_${d(n.hour)}${d(n.minute)}${d(n.second)}.pdf');
-    }
-    final file = File('${dir.path}${Platform.pathSeparator}$nama');
-    await file.writeAsBytes(bytes, flush: true);
-    return file.path;
-  }
-
-  static Future<void> _modalBerhasil(BuildContext context, String namaFile, String path) {
-    return showDialog<void>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        icon: const Icon(Icons.check_circle_rounded, color: Color(0xFF16A34A), size: 48),
-        title: const Text('PDF berhasil diunduh', textAlign: TextAlign.center),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('Tersimpan di penyimpanan perangkat:'),
-            const SizedBox(height: 8),
-            Text(namaFile, style: const TextStyle(fontWeight: FontWeight.w700)),
-            const SizedBox(height: 4),
-            SelectableText(path, style: const TextStyle(fontSize: 12, color: Colors.black54)),
-          ],
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Tutup')),
-          FilledButton(
-            onPressed: () {
-              OpenFilex.open(path);
-            },
-            child: const Text('Buka'),
-          ),
-        ],
-      ),
-    );
   }
 }

@@ -110,7 +110,8 @@ class _EksporCsvScreenState extends State<EksporCsvScreen> {
       String t(DateTime d) =>
           '${d.year}${d.month.toString().padLeft(2, '0')}${d.day.toString().padLeft(2, '0')}';
       final akhir = DateTime(r.akhir.year, r.akhir.month, r.akhir.day - 1);
-      await CsvService.bagikan(csv, 'BiliCheck_Pemeriksaan_${t(r.awal)}_${t(akhir)}.csv');
+      if (!mounted) return;
+      await CsvService.unduh(context, csv, 'BiliCheck_Pemeriksaan_${t(r.awal)}_${t(akhir)}.csv');
     } catch (e) {
       messenger.showSnackBar(SnackBar(content: Text('Gagal ekspor: $e')));
     } finally {

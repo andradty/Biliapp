@@ -1,11 +1,12 @@
 import 'dart:convert';
-import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:path_provider/path_provider.dart';
+import 'package:flutter/material.dart' show BuildContext;
 import 'package:share_plus/share_plus.dart';
 
 import '../models/pemeriksaan.dart';
+import 'unduh_file.dart';
 
 /// Ekspor pemeriksaan ke CSV. Pemisah ';' + desimal koma cocok untuk Excel
 /// berlokal Indonesia; ',' + desimal titik untuk Excel/tool lain.
@@ -43,6 +44,13 @@ class CsvService {
     return desimal == ',' ? s.replaceAll('.', ',') : s;
   }
 
+  /// Konsentrasi sangat kecil (~1e-6): notasi ilmiah supaya tidak terbaca 0.
+  static String _ilmiah(dynamic v, String desimal) {
+    if (v is! num) return '';
+    final s = v.toStringAsExponential(4);
+    return desimal == ',' ? s.replaceAll('.', ',') : s;
+  }
+
   static String _sel(String v, String pemisah) {
     if (v.contains(pemisah) || v.contains('"') || v.contains('\n') || v.contains('\r')) {
       return '"${v.replaceAll('"', '""')}"';
@@ -51,11 +59,11 @@ class CsvService {
   }
 
   static String buat(
-    List<Pemeriksaan> data,
-    Map<String, String> namaPasien, {
-    String pemisah = ';',
-    bool sertakanDibatalkan = false,
-  }) {
+      List<Pemeriksaan> data,
+      Map<String, String> namaPasien, {
+        String pemisah = ';',
+        bool sertakanDibatalkan = false,
+      }) {
     final desimal = pemisah == ';' ? ',' : '.';
     final buf = StringBuffer('\uFEFF'); // BOM agar Excel membaca UTF-8
     buf.write('${kolom.join(pemisah)}\r\n');
@@ -74,7 +82,7 @@ class CsvService {
         e.kalibrasiId,
         _angka(m['adc'], desimal),
         _angka(m['lux'], desimal),
-        _angka(m['konsentrasi'], desimal),
+        _ilmiah(m['konsentrasi'], desimal),
         _angka(m['jaundice_persen'], desimal),
       ];
       buf.write('${baris.map((v) => _sel(v, pemisah)).join(pemisah)}\r\n');
@@ -82,17 +90,17 @@ class CsvService {
     return buf.toString();
   }
 
-  static Future<void> bagikan(String isi, String namaFile) async {
-    final bytes = utf8.encode(isi);
-    final XFile file;
+  /// Android/iOS/desktop: simpan ke penyimpanan lalu tampilkan modal berhasil.
+  /// Web: unduhan ditangani browser.
+  static Future<void> unduh(BuildContext context, String isi, String namaFile) async {
+    final bytes = Uint8List.fromList(utf8.encode(isi));
     if (kIsWeb) {
-      file = XFile.fromData(bytes, mimeType: 'text/csv', name: namaFile);
-    } else {
-      final dir = await getTemporaryDirectory();
-      final f = File('${dir.path}/$namaFile');
-      await f.writeAsBytes(bytes, flush: true);
-      file = XFile(f.path, mimeType: 'text/csv');
+      final file = XFile.fromData(bytes, mimeType: 'text/csv', name: namaFile);
+      await SharePlus.instance.share(ShareParams(files: [file], subject: namaFile));
+      return;
     }
-    await SharePlus.instance.share(ShareParams(files: [file], subject: namaFile));
+    final path = await UnduhFile.simpan(bytes, namaFile);
+    if (!context.mounted) return;
+    await UnduhFile.modalBerhasil(context, 'CSV', namaFile, path, mimeType: 'text/csv');
   }
 }

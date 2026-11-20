@@ -301,7 +301,8 @@ class _MulaiPemeriksaanScreenState extends State<MulaiPemeriksaanScreen> {
     return Row(children: [
       sel('Nilai ADC', f('adc', 0)),
       sel('Intensitas (lux)', f('lux', 0)),
-      sel('Konsentrasi', f('konsentrasi', 6)),
+      sel('Konsentrasi',
+          p?['konsentrasi'] is num ? fmtKonsentrasi(p!['konsentrasi'] as num) : '-'),
     ]);
   }
 
