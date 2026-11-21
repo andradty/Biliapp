@@ -45,6 +45,8 @@ class _MulaiPemeriksaanScreenState extends State<MulaiPemeriksaanScreen> {
   // ---- Alat (RTDB) ----
   StreamSubscription<BacaanAlat?>? _subLive;
   StreamSubscription<BacaanAlat?>? _subHasil;
+  StreamSubscription<bool>? _subServer;
+  DateTime? _putusSejak; // sejak kapan koneksi ke server terputus (null = tersambung)
   Timer? _ticker;
   BacaanAlat? _live;
   DateTime? _liveTerakhir;
@@ -68,6 +70,7 @@ class _MulaiPemeriksaanScreenState extends State<MulaiPemeriksaanScreen> {
   void dispose() {
     _subLive?.cancel();
     _subHasil?.cancel();
+    _subServer?.cancel();
     _ticker?.cancel();
     // Layar ditutup tanpa menyimpan: beri tahu alat bahwa sesi ini batal.
     if (!_tersimpan && _sesiId != null && _device != null) {
@@ -99,6 +102,13 @@ class _MulaiPemeriksaanScreenState extends State<MulaiPemeriksaanScreen> {
   }
 
   void _mulaiDengar() {
+    _subServer = widget.svc.koneksiServer().listen((tersambung) {
+      if (!mounted) return;
+      setState(() => _putusSejak = tersambung ? null : (_putusSejak ?? DateTime.now()));
+      // Pulih dari gangguan: buka sesi lagi kalau sebelumnya gagal.
+      if (tersambung && _sesiId == null) _bukaSesi();
+    });
+
     _subLive = widget.svc.bacaanLive(_device!.id).listen((b) {
       if (!mounted) return;
       setState(() {
@@ -159,9 +169,37 @@ class _MulaiPemeriksaanScreenState extends State<MulaiPemeriksaanScreen> {
         if (mounted) setState(() => _errorAlat = '$e');
       });
     } catch (e) {
+      debugPrint('Gagal membuka sesi: $e');
       if (mounted) setState(() => _errorAlat = 'Gagal membuka sesi di alat: $e');
     }
   }
+
+  /// Server dianggap bermasalah kalau koneksi Firebase putus > 4 detik
+  /// (jeda awal saat app baru membuka koneksi tidak dihitung) atau ada error dari stream/sesi.
+  bool get _serverBermasalah {
+    if (_errorAlat != null) return true;
+    final s = _putusSejak;
+    return s != null && DateTime.now().difference(s).inSeconds >= 4;
+  }
+
+  Widget _bannerServer(String teks) => Container(
+    margin: const EdgeInsets.only(bottom: 12),
+    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+    decoration: BoxDecoration(
+      color: const Color(0xFFFDECEA),
+      borderRadius: BorderRadius.circular(14),
+      border: Border.all(color: const Color(0xFFF5B7B1)),
+    ),
+    child: Row(children: [
+      const Icon(Icons.cloud_off_rounded, size: 20, color: Color(0xFFC62828)),
+      const SizedBox(width: 10),
+      Expanded(
+        child: Text(teks,
+            style: const TextStyle(
+                fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFFC62828))),
+      ),
+    ]),
+  );
 
   _Koneksi get _koneksi {
     if (_live == null || _liveTerakhir == null) return _Koneksi.menunggu;
@@ -205,15 +243,15 @@ class _MulaiPemeriksaanScreenState extends State<MulaiPemeriksaanScreen> {
     // Tidak di-await: saat offline Firestore menaruhnya di antrean lokal.
     widget.svc
         .tambahPemeriksaan(
-          pasien: _pasien!,
-          device: _device!,
-          hasil: nilai,
-          satuan: kSatuan,
-          pengukuran: pengukuran,
-          sesiId: sesiId,
-        )
+      pasien: _pasien!,
+      device: _device!,
+      hasil: nilai,
+      satuan: kSatuan,
+      pengukuran: pengukuran,
+      sesiId: sesiId,
+    )
         .catchError((e) => messenger
-            .showSnackBar(SnackBar(content: Text('Gagal menyimpan pemeriksaan: $e'))));
+        .showSnackBar(SnackBar(content: Text('Gagal menyimpan pemeriksaan: $e'))));
     messenger.showSnackBar(const SnackBar(
         content: Text('Pemeriksaan disimpan. Akan tersinkron otomatis saat online.')));
     Navigator.pop(context);
@@ -263,23 +301,23 @@ class _MulaiPemeriksaanScreenState extends State<MulaiPemeriksaanScreen> {
   // ---------------- UI ----------------
 
   Widget _kartu(List<Widget> anak) => Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: anak),
-      );
+    width: double.infinity,
+    padding: const EdgeInsets.all(16),
+    decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+    child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: anak),
+  );
 
   Widget _baris(String l, String v) => Padding(
-        padding: const EdgeInsets.symmetric(vertical: 3),
-        child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          SizedBox(
-              width: 110,
-              child: Text(l, style: const TextStyle(fontSize: 13, color: AppColors.muted))),
-          Expanded(
-              child: Text(v,
-                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600))),
-        ]),
-      );
+    padding: const EdgeInsets.symmetric(vertical: 3),
+    child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      SizedBox(
+          width: 110,
+          child: Text(l, style: const TextStyle(fontSize: 13, color: AppColors.muted))),
+      Expanded(
+          child: Text(v,
+              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600))),
+    ]),
+  );
 
   /// Tiga nilai pendukung seperti di dashboard web: ADC, lux, konsentrasi.
   Widget _metrik(Map<String, dynamic>? p) {
@@ -289,14 +327,14 @@ class _MulaiPemeriksaanScreenState extends State<MulaiPemeriksaanScreen> {
     }
 
     Widget sel(String label, String nilai) => Expanded(
-          child: Column(children: [
-            Text(nilai,
-                style: const TextStyle(
-                    fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.ink)),
-            const SizedBox(height: 2),
-            Text(label, style: const TextStyle(fontSize: 11.5, color: AppColors.muted)),
-          ]),
-        );
+      child: Column(children: [
+        Text(nilai,
+            style: const TextStyle(
+                fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.ink)),
+        const SizedBox(height: 2),
+        Text(label, style: const TextStyle(fontSize: 11.5, color: AppColors.muted)),
+      ]),
+    );
 
     return Row(children: [
       sel('Nilai ADC', f('adc', 0)),
@@ -317,8 +355,8 @@ class _MulaiPemeriksaanScreenState extends State<MulaiPemeriksaanScreen> {
             child: _loading
                 ? const Center(child: CircularProgressIndicator())
                 : _error != null
-                    ? SingleChildScrollView(child: ErrorBox(_error!))
-                    : _isi(),
+                ? SingleChildScrollView(child: ErrorBox(_error!))
+                : _isi(),
           ),
         ]),
       ),
@@ -328,6 +366,7 @@ class _MulaiPemeriksaanScreenState extends State<MulaiPemeriksaanScreen> {
   Widget _isi() {
     final hambatan = _hambatan;
     return ListView(padding: const EdgeInsets.all(20), children: [
+      if (_serverBermasalah) _bannerServer('Server sedang bermasalah, coba lagi nanti.'),
       _kartu([
         _baris('Pasien', _pasien?.nama ?? '-'),
         _baris('Alat', _device?.id ?? '-'),
@@ -343,7 +382,6 @@ class _MulaiPemeriksaanScreenState extends State<MulaiPemeriksaanScreen> {
           ]),
         ])
       else ...[
-        if (_errorAlat != null) ErrorBox(_errorAlat!),
         if (_rekam != null) _kartuRekam(_rekam!) else _kartuLive(),
         if (kInputManual) ..._bagianManual(),
       ],
@@ -353,7 +391,12 @@ class _MulaiPemeriksaanScreenState extends State<MulaiPemeriksaanScreen> {
   // ---- Bacaan realtime ----
   Widget _kartuLive() {
     final b = _live;
-    final tampil = b != null;
+    // Tampil hanya kalau data BARU masuk (n berubah) dan belum stale.
+    // Nilai lama yang tersisa di RTDB tidak ditampilkan.
+    final tampil = b != null && _koneksi == _Koneksi.ok;
+    final pesanKosong = _koneksi == _Koneksi.putus
+        ? 'Alat tidak mengirim data. Pastikan alat menyala dan terhubung WiFi.'
+        : 'Menunggu data dari alat...';
 
     return _kartu([
       const SizedBox(height: 14),
@@ -368,12 +411,12 @@ class _MulaiPemeriksaanScreenState extends State<MulaiPemeriksaanScreen> {
                 color: AppColors.ink),
           ),
           const SizedBox(height: 4),
-          if (tampil) ...[
+          if (!tampil)
             Text(
-              'Nilai ini berubah-ubah selama alat membaca.',
+              pesanKosong,
+              textAlign: TextAlign.center,
               style: const TextStyle(fontSize: 12.5, height: 1.4, color: AppColors.muted),
             ),
-          ],
         ]),
       ),
       const SizedBox(height: 16),
@@ -381,7 +424,7 @@ class _MulaiPemeriksaanScreenState extends State<MulaiPemeriksaanScreen> {
       const SizedBox(height: 14),
       const Text(
         'Nilai ini berubah-ubah selama alat membaca. Tekan tombol REKAM di alat '
-        'saat angka sudah stabil untuk mengambil hasil.',
+            'saat angka sudah stabil untuk mengambil hasil.',
         style: TextStyle(fontSize: 12.5, height: 1.4, color: AppColors.muted),
       ),
     ]);
@@ -446,7 +489,7 @@ class _MulaiPemeriksaanScreenState extends State<MulaiPemeriksaanScreen> {
           Expanded(
             child: Text(
               'Mode input manual: nilai dari alat diketik sendiri. '
-              'Data ditandai sumber "manual".',
+                  'Data ditandai sumber "manual".',
               style: TextStyle(fontSize: 12.5, height: 1.4),
             ),
           ),

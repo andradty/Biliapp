@@ -181,7 +181,7 @@ class _LandingScreenState extends State<LandingScreen> {
                                 const Padding(
                                   padding: EdgeInsets.symmetric(horizontal: 8),
                                   child: Text(
-                                    'Atbat pembaca kadar bilirubin berlaku ITS untuk Puskesmas dan Posyandu, '
+                                    'Alat pembaca kadar bilirubin berbasis IoT untuk Puskesmas dan Posyandu, '
                                     'dengan aplikasi untuk Petugas dan Orang Tua.',
                                     textAlign: TextAlign.center,
                                     style: TextStyle(

@@ -10,14 +10,15 @@ const String kMitra = 'Aep Setiawan, S.Si., M.Si.';
 
 /// nama -> peran (kosongkan peran kalau belum ingin ditampilkan)
 const Map<String, String> kAnggotaTim = {
-  'Nala Arham Rozana': 'Manajer Proyek • Aplikasi Mobile',
-  'Raditya Rakha Irianto': 'Anggota Tim',
-  'Faiz Aidil Baihaqi': 'Anggota Tim',
-  'Ammar Hudzafah': 'Anggota Tim',
-  'Muhammad Adam Ilyasa': 'Anggota Tim',
-  "Daffa' Raihandi": 'Anggota Tim',
-  'Ramaditya Devara Mulya': 'Anggota Tim',
-  'Deandra Aidila Hidayat': 'Anggota Tim',
+  'Dodik Ariyanto, S.T.P., M.Si.': 'Supervising Lecturer',
+  'Nala Arham Rozana': 'Project Manager',
+  'Raditya Rakha Irianto': 'Secretary',
+  'Faiz Aidil Baihaqi': 'Cloud Architect',
+  'Ammar Hudzafah': 'Hardware Engineer',
+  'Muhammad Adam Ilyasa': 'Director Of Creative',
+  "Daffa' Raihandi": 'Product Designer',
+  'Ramaditya Devara Mulya': 'Tool Manager',
+  'Deandra Aidila Hidayat': 'Mobile App Developer',
 };
 
 class TentangScreen extends StatelessWidget {
@@ -60,7 +61,7 @@ class TentangScreen extends StatelessWidget {
                 ),
               ])),
               SectionLabel('Tim $kNamaKelompok'),
-              _kartu(Text('kInstitusi',
+              _kartu(Text(kInstitusi,
                   style: const TextStyle(fontSize: 13, color: AppColors.muted))),
               for (final e in kAnggotaTim.entries)
                 Container(

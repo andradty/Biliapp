@@ -147,6 +147,10 @@ class DataService {
       .onValue
       .map((e) => BacaanAlat.dari(e.snapshot.value));
 
+  /// Status koneksi app ke server Firebase (RTDB). false = server/jaringan bermasalah.
+  Stream<bool> koneksiServer() =>
+      _rtdb.ref('.info/connected').onValue.map((e) => e.snapshot.value == true);
+
   /// Info yang ditulis alat berkala (firmware, sinyal WiFi, terakhir terlihat).
   Stream<StatusAlat?> statusAlat(String deviceId) => _rtdb
       .ref('devices/$deviceId/status')
