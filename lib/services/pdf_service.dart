@@ -137,15 +137,12 @@ class PdfService {
     sah.isEmpty ? null : sah.map((e) => e.hasil).reduce((a, b) => a + b) / sah.length;
 
     final baris = <List<String>>[
-      for (var i = 0; i < data.length; i++)
+      for (var i = 0; i < sah.length; i++)
         [
           '${i + 1}',
-          fmtTanggal(data[i].waktu),
-          fmtJam(data[i].waktu),
-          '${fmtKadar(data[i].hasil)} ${data[i].satuan}',
-          data[i].dibatalkan
-              ? 'Dibatalkan${(data[i].alasanBatal ?? '').isEmpty ? '' : ': ${data[i].alasanBatal}'}'
-              : '',
+          fmtTanggal(sah[i].waktu),
+          fmtJam(sah[i].waktu),
+          '${fmtKadar(sah[i].hasil)} ${sah[i].satuan}',
         ],
     ];
 
@@ -165,7 +162,7 @@ class PdfService {
           pw.Text('Belum ada pemeriksaan.', style: const pw.TextStyle(color: _muted))
         else
           pw.TableHelper.fromTextArray(
-            headers: ['No', 'Tanggal', 'Jam', 'Hasil', 'Keterangan'],
+            headers: ['No', 'Tanggal', 'Jam', 'Hasil'],
             data: baris,
             headerStyle:
             pw.TextStyle(color: PdfColors.white, fontSize: 10, fontWeight: pw.FontWeight.bold),
@@ -173,13 +170,12 @@ class PdfService {
             cellStyle: const pw.TextStyle(fontSize: 10),
             cellAlignment: pw.Alignment.centerLeft,
             border: pw.TableBorder.all(color: _garis, width: 0.5),
-            cellPadding: const pw.EdgeInsets.symmetric(horizontal: 5, vertical: 4),
+            cellPadding: const pw.EdgeInsets.symmetric(horizontal: 6, vertical: 5),
             columnWidths: {
-              0: const pw.FixedColumnWidth(26),
-              1: const pw.FixedColumnWidth(86),
-              2: const pw.FixedColumnWidth(40),
-              3: const pw.FixedColumnWidth(60),
-              4: const pw.FlexColumnWidth(),
+              0: const pw.FixedColumnWidth(32),
+              1: const pw.FlexColumnWidth(2),
+              2: const pw.FlexColumnWidth(1),
+              3: const pw.FlexColumnWidth(1.5),
             },
           ),
         pw.SizedBox(height: 18),
